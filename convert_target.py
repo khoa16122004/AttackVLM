@@ -9,7 +9,7 @@ with open(annotation_file_path, 'r') as f:
 
 for i, img_name in enumerate(sorted(os.listdir(target_image_dir))):
     old_path = os.path.join(target_image_dir, img_name)
-    print(img_name)
+    # print(img_name)
     continue
     new_name = lines[i]  # Cập nhật tên từ annotation
     new_path = os.path.join(target_image_dir, new_name)
