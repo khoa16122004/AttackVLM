@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     # start attack
     # for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
-    for i, (image_org, gt_txt, gt_path, image_tgt, target_path) in enumerate(data):
+    for i, (image_org, gt_txt, gt_path, image_tgt, tar_txt, target_path) in enumerate(data):
         if args.batch_size * (i+1) > args.num_samples:
             break
         
