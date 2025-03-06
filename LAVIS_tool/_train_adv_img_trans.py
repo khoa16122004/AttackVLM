@@ -88,7 +88,7 @@ if __name__ == "__main__":
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
     parser.add_argument("--steps", default=300, type=int)
-    parser.add_argument("--output", default="temp", type=str, help='the folder name that restore your outputs')
+    parser.add_argument("--output", default="test", ype=str, help='the folder name that restore your outputs')
     parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
     parser.add_argument("--target_dir", type=str, help="The folder name contains the target image")
     parser.add_argument("--annotation_file", type=str)
@@ -108,7 +108,6 @@ if __name__ == "__main__":
     # select and load model
     print(f"Loading LAVIS models: {args.model_name}, model_type: {args.model_type}...")
     blip_model, vis_processors, _ = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
-    print(f"Done")
     print("Output path: ", args.output)
     os.makedirs(args.output, exist_ok=True)
     # ------------- pre-processing images/text ------------- #
