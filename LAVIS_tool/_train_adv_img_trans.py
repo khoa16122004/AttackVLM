@@ -184,6 +184,7 @@ if __name__ == "__main__":
             # folder_to_save = os.path.join('../_output_img', args.output, folder)
             # if not os.path.exists(folder_to_save):
             #     os.makedirs(folder_to_save, exist_ok=True)
+            print("GT Path: ", gt_path[path_idx])
             torchvision.utils.save_image(adv_image[path_idx], output_path)
 
         break
