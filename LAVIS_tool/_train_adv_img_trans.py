@@ -97,6 +97,7 @@ if __name__ == "__main__":
         image_org = image_org.to(device)
         image_tgt = image_tgt.to(device)
         
+        print("Path: ", path)
         print("Đã load xong image_org và image_target, shape của chúng: ", image_org.shape, image_tgt.shape)
         
         sample_org = {"image": image_org}
