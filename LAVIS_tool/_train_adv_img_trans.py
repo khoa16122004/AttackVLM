@@ -113,7 +113,7 @@ if __name__ == "__main__":
     # ------------- pre-processing images/text ------------- #
     # imagenet_data = ImageFolderWithPaths(args.image_dir, transform=None) # image data
     # target_data   = ImageFolderWithPaths(args.target_dir, transform=None) # target image data
-    data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir)[1:]
+    data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir)
     # print(data[0])
     # print(len(data))
     
@@ -126,6 +126,8 @@ if __name__ == "__main__":
     # start attack
     # for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
     for i, (image_org, gt_txt, gt_path, image_tgt, tar_txt, target_path) in enumerate(data_loader):
+        if i == 0:
+            continue
         if args.batch_size * (i+1) > args.num_samples:
             break
         
