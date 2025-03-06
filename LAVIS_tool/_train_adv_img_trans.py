@@ -176,7 +176,7 @@ if __name__ == "__main__":
         # save imgs
         adv_image = image_org + delta
         torchvision.utils.save_image(adv_image, os.path.join(args.output, "adv_.png"))
-        adv_image = torch.clamp(inverse_normalize(adv_image), 0.0, 1.0)
+        adv_image = torch.clamp(adv_image, 0.0, 1.0)
 
         
         print("Done iteration")
