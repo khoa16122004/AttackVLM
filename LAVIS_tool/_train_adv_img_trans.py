@@ -110,21 +110,22 @@ if __name__ == "__main__":
     blip_model, vis_processors, _ = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
     print(f"Done")
     
+    
     # ------------- pre-processing images/text ------------- #
     # imagenet_data = ImageFolderWithPaths(args.image_dir, transform=None) # image data
     # target_data   = ImageFolderWithPaths(args.target_dir, transform=None) # target image data
     data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir)
-    
+    print(data[0])
     
     
     # data_loader_imagenet = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
     # data_loader_target   = torch.utils.data.DataLoader(target_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
-    data_loader_target   = torch.utils.data.DataLoader(data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
+    data_loader   = torch.utils.data.DataLoader(data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
     inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862954, -0.4578275 / 0.26130258, -0.40821073 / 0.27577711], std=[1.0 / 0.26862954, 1.0 / 0.26130258, 1.0 / 0.27577711])
 
     # start attack
     # for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
-    for i, (image_org, gt_txt, gt_path, image_tgt, tar_txt, target_path) in enumerate(data):
+    for i, (image_org, gt_txt, gt_path, image_tgt, tar_txt, target_path) in enumerate(data_loader):
         if args.batch_size * (i+1) > args.num_samples:
             break
         
@@ -137,6 +138,7 @@ if __name__ == "__main__":
         
         sample_org = {"image": image_org}
         sample_tgt = {"image": image_tgt}
+        
         
         # extract image features
         with torch.no_grad():
