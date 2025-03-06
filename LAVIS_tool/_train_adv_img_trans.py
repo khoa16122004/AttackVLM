@@ -179,7 +179,7 @@ if __name__ == "__main__":
         
         print("Done iteration")
         for path_idx in range(len(gt_path)):
-            basename = os.path.basename(path_idx)
+            basename = os.path.basename(gt_path[path_idx])
             print(basename)
             # folder, name = gt_path[path_idx].split("/")[-2], gt_path[path_idx].split("/")[-1]
             # folder_to_save = os.path.join('../_output_img', args.output, folder)
