@@ -150,7 +150,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", default="temp", type=str)
     parser.add_argument("--data_path", default="temp", type=str)
     parser.add_argument("--text_path", default="temp.txt", type=str)
-    
+    parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
+    parser.add_argument("--target_dir", type=str, help="The folder name contains the target image")    
     parser.add_argument("--delta", default="normal", type=str)
     parser.add_argument("--num_query", default=20, type=int)
     parser.add_argument("--num_sub_query", default=5, type=int)
