@@ -2,7 +2,8 @@ import os
 
 annotation_file_path = "annotations.txt" 
 target_image_dir = "target_image/samples"
-
+original_image = "images"
+print(len(os.listdir(original_image)))
 with open(annotation_file_path, 'r') as f:
     lines = [line.strip().split()[0] for line in f.readlines()]  # Sửa lỗi split()
 
