@@ -179,10 +179,12 @@ if __name__ == "__main__":
         
         print("Done iteration")
         for path_idx in range(len(gt_path)):
-            folder, name = gt_path[path_idx].split("/")[-2], gt_path[path_idx].split("/")[-1]
-            folder_to_save = os.path.join('../_output_img', args.output, folder)
-            if not os.path.exists(folder_to_save):
-                os.makedirs(folder_to_save, exist_ok=True)
-            torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + 'png')
+            basename = os.path.basename(gt_path)
+            print(basename)
+            # folder, name = gt_path[path_idx].split("/")[-2], gt_path[path_idx].split("/")[-1]
+            # folder_to_save = os.path.join('../_output_img', args.output, folder)
+            # if not os.path.exists(folder_to_save):
+            #     os.makedirs(folder_to_save, exist_ok=True)
+            # torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + 'png')
 
         break
