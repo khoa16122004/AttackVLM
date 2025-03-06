@@ -448,8 +448,8 @@ if __name__ == "__main__":
         # log text
         basename = os.path.basename(gt_path[i])
 
-        torchvision.utils.save_image(adv_image_in_current_step, os.path.join(args.output, basename))
-        torchvision.utils.save_image(image_clean, os.path.join(args.output, "clean_" + basename))
+        torchvision.utils.save_image(adv_image_in_current_step / 255.0, os.path.join(args.output, basename))
+        torchvision.utils.save_image(image_clean / 255.0, os.path.join(args.output, "clean_" + basename))
         print("best caption of current image:", best_caption)
         with open(os.path.join(args.output + '.txt'), 'a') as f:
             # print(''.join([best_caption]), file=f)
