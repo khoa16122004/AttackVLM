@@ -59,8 +59,8 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
-    image = vis_processors["eval"](Image.open(args.img_path).convert("RGB"))
-    adv_image = vis_processors["eval"](Image.open(args.adv_path).convert("RGB"))
+    image = vis_processors["eval"](Image.open(args.img_path).convert("RGB")).cuda()
+    adv_image = vis_processors["eval"](Image.open(args.adv_path).convert("RGB")).cuda()
     
     with torch.no_grad():
         samples = {"image": torch.stack([image, adv_image])}
