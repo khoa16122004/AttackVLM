@@ -113,7 +113,7 @@ if __name__ == "__main__":
     # ------------- pre-processing images/text ------------- #
     # imagenet_data = ImageFolderWithPaths(args.image_dir, transform=None) # image data
     # target_data   = ImageFolderWithPaths(args.target_dir, transform=None) # target image data
-    data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir)
+    data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir)[1:]
     # print(data[0])
     # print(len(data))
     
