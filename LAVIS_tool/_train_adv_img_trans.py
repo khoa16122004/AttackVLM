@@ -160,7 +160,7 @@ if __name__ == "__main__":
                 adv_image_features = blip_model.forward_encoder(sample_adv)
                 
             adv_image_features = (adv_image_features)[:,0,:]  # size = (bs, 768)
-            print("Adv image features: ",adv_image_features.shape)
+            # print("Adv image features: ",adv_image_features.shape)
             adv_image_features = adv_image_features / adv_image_features.norm(dim=1, keepdim=True) # normalize
             
             embedding_sim = torch.mean(torch.sum(adv_image_features * tgt_image_features, dim=1))  # cos. sim
