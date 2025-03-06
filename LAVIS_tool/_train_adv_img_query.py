@@ -132,6 +132,8 @@ def _i2t(args, txt_processors, model, image):
                 caption_merged = caption_merged + cap
     else:
         samples  = {"image": image}
+        print(samples)
+
         caption  = model.generate(samples, use_nucleus_sampling=True, num_captions=1)
         caption_merged = caption
     
@@ -336,6 +338,8 @@ if __name__ == "__main__":
                     text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
                 else:
                     with torch.no_grad():
+                        print()
+
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
             
