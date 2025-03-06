@@ -1,7 +1,7 @@
 import argparse
 import os
 import random
-import clip
+# import clip
 import numpy as np
 import torch
 import torchvision
