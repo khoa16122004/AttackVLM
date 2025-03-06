@@ -115,8 +115,8 @@ if __name__ == "__main__":
     # imagenet_data = ImageFolderWithPaths(args.image_dir, transform=None) # image data
     # target_data   = ImageFolderWithPaths(args.target_dir, transform=None) # target image data
     data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir)
-    print(data[0])
-    print(len(data))
+    # print(data[0])
+    # print(len(data))
     
     
     # data_loader_imagenet = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
@@ -177,6 +177,7 @@ if __name__ == "__main__":
         adv_image = image_org + delta
         adv_image = torch.clamp(inverse_normalize(adv_image), 0.0, 1.0)
         
+        print("Done iteration")
         for path_idx in range(len(gt_path)):
             folder, name = gt_path[path_idx].split("/")[-2], gt_path[path_idx].split("/")[-1]
             folder_to_save = os.path.join('../_output_img', args.output, folder)
