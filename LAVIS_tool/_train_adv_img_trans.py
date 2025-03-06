@@ -80,8 +80,9 @@ if __name__ == "__main__":
     print(f"Done")
     
     # ------------- pre-processing images/text ------------- #
-    imagenet_data = ImageFolderWithPaths("path to raw imagenet val", transform=None)
-    target_data   = ImageFolderWithPaths("dir to your target data", transform=None)
+    imagenet_data = ImageFolderWithPaths("path to raw imagenet val", transform=None) # image data
+    target_data   = ImageFolderWithPaths("dir to your target data", transform=None) # target image data
+    
     
     data_loader_imagenet = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
     data_loader_target   = torch.utils.data.DataLoader(target_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
@@ -95,6 +96,8 @@ if __name__ == "__main__":
         # (bs, c, h, w)
         image_org = image_org.to(device)
         image_tgt = image_tgt.to(device)
+        
+        print("Đã load xong image_org và image_target, shape của chúng: ", image_org.shape, image_tgt.shape)
         
         sample_org = {"image": image_org}
         sample_tgt = {"image": image_tgt}
@@ -119,7 +122,8 @@ if __name__ == "__main__":
                 adv_image_features = blip_model.forward_encoder(sample_adv)
                 
             adv_image_features = (adv_image_features)[:,0,:]  # size = (bs, 768)
-            adv_image_features = adv_image_features / adv_image_features.norm(dim=1, keepdim=True)
+            print("Adv image features: ",adv_image_features.shape)
+            adv_image_features = adv_image_features / adv_image_features.norm(dim=1, keepdim=True) # normalize
             
             embedding_sim = torch.mean(torch.sum(adv_image_features * tgt_image_features, dim=1))  # cos. sim
             embedding_sim.backward()
@@ -140,3 +144,5 @@ if __name__ == "__main__":
             if not os.path.exists(folder_to_save):
                 os.makedirs(folder_to_save, exist_ok=True)
             torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + 'png')
+
+        break
