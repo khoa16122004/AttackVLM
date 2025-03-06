@@ -77,7 +77,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 
 
 class CustomDataset(Dataset):
-    def __init__(self, annotations_file, image_dir, target_dir):
+    def __init__(self, annotations_file, image_dir, target_dir, transform=None):
         with open(annotations_file, "r") as f:
             lines = [line.strip().split("\t") for line in f.readlines()]
             self.file_names = [line[0] for line in lines]
@@ -86,7 +86,9 @@ class CustomDataset(Dataset):
             
         self.image_dir = image_dir
         self.target_dir = target_dir
-    
+        self.transform = transform
+
+        
     def __len__(self):
         return len(self.file_names)
     
@@ -99,10 +101,12 @@ class CustomDataset(Dataset):
         image = Image.open(image_path).convert("RGB")
         target_image = Image.open(target_path).convert("RGB")
 
-        image_processed = vis_processors["eval"](image)
-        target_image_processed = vis_processors["eval"](target_image)
+        # image_processed = vis_processors["eval"](image)
+        # target_image_processed = vis_processors["eval"](target_image)
         # text_processed  = txt_processors["eval"](class_text_all[original_tuple[1]])
-
+        image_processed = self.transform(image)
+        target_image_processed = self.transform(target_image)
+        
         return image_processed, gt_txt, image_path, target_image_processed, tar_txt, target_path
 
 
