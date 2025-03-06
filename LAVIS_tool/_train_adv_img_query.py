@@ -291,7 +291,7 @@ if __name__ == "__main__":
         run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)
     
     # for i, ((image, _, path), (image_clean, _, _)) in enumerate(zip(data_loader, clean_data_loader)):
-    for i, (image, gt_txt, gt_path, image_clean, tar_txt, path) in enumerate(data_loader):
+    for i, (image_clean, gt_txt, gt_path, image, tar_txt, path) in enumerate(data_loader):
 
         if batch_size * (i+1) > args.num_samples:
             break
@@ -339,7 +339,7 @@ if __name__ == "__main__":
                 else:
                     with torch.no_grad():
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
-                        print("Querry index: ", query_idx)
+                        print("Text peruturbed images: ", text_of_sub_perturbed_imgs)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
             
             # step 2. estimate grad
@@ -448,6 +448,7 @@ if __name__ == "__main__":
         basename = os.path.basename(gt_path[i])
 
         torchvision.utils.save_image(adv_image_in_current_step, os.path.join(args.output, basename))
+        torchvision.utils.save_image(image_clean, os.path.join(args.output, "clean_" + basename))
         print("best caption of current image:", best_caption)
         with open(os.path.join(args.output + '.txt'), 'a') as f:
             # print(''.join([best_caption]), file=f)
