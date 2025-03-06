@@ -237,6 +237,7 @@ if __name__ == "__main__":
     # baseline results
     vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
     query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
+    print("querry attack results: ", vit_attack_results)
     assert (vit_attack_results == query_attack_results).all()
     
     # ## other arch
