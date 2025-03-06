@@ -132,6 +132,7 @@ def _i2t(args, txt_processors, model, image):
                 caption_merged = caption_merged + cap
     else:
         samples  = {"image": image}
+        print(samples["image"].shape)
         caption  = model.generate(samples, use_nucleus_sampling=True, num_captions=1)
         caption_merged = caption
     
