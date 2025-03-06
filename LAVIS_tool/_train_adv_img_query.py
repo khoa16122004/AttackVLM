@@ -360,7 +360,9 @@ if __name__ == "__main__":
             print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
             print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
             
-            adv_image_in_current_step = torch.clamp(image_clean+delta, 0.0, 255.0)
+            print("Range: ", image_clean.max(), delta.max())
+            
+            adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
             print("adv_image_in_current_step: ", adv_image_in_current_step)
             # get adv text
             if args.model_name == 'img2prompt_vqa':
