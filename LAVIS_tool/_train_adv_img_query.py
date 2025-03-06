@@ -179,7 +179,7 @@ if __name__ == "__main__":
     clip_img_model_vitb32, _ = clip.load("ViT-B/32", device=device, jit=False)
     # clip_img_model_vitl14, _ = clip.load("ViT-L/14", device=device, jit=False)
     print("Done")
-    os.makedirs(args.text_query)
+    os.makedirs(args.output, exist_ok=True)
     
     # ---------------------- #
 
