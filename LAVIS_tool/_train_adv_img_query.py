@@ -317,7 +317,6 @@ if __name__ == "__main__":
                 image_repeat = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
             else:
                 image_repeat = adv_image_in_current_step.repeat(num_query, 1, 1, 1)             
-
                 lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step)
                 adv_vit_text_token_in_current_step      = clip.tokenize(lavis_text_of_adv_image_in_current_step).to(device)
                 adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step)
@@ -330,8 +329,8 @@ if __name__ == "__main__":
             
             # num_query is obtained via serveral iterations
             text_of_perturbed_imgs = []
-            # for query_idx in range(num_query//num_sub_query):
-            for query_idx in range(num_query):
+            for query_idx in range(num_query//num_sub_query):
+            # for query_idx in range(num_query):
                 print("Querry index: ", query_idx)
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
                 if args.model_name == 'img2prompt_vqa':
