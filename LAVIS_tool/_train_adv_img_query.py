@@ -132,7 +132,6 @@ def _i2t(args, txt_processors, model, image):
                 caption_merged = caption_merged + cap
     else:
         samples  = {"image": image}
-        print(samples)
         caption  = model.generate(samples, use_nucleus_sampling=True, num_captions=1)
         caption_merged = caption
     
@@ -361,7 +360,7 @@ if __name__ == "__main__":
             print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
             
             adv_image_in_current_step = torch.clamp(image_clean+delta, 0.0, 255.0)
-            
+            print("adv_image_in_current_step: ", adv_image_in_current_step)
             # get adv text
             if args.model_name == 'img2prompt_vqa':
                 lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step)
