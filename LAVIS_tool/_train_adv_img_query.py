@@ -298,6 +298,7 @@ if __name__ == "__main__":
         torch.cuda.empty_cache()
         
         best_caption = lavis_text_of_adv_vit[i]
+        
         better_flag = 0
         
         for step_idx in range(args.steps):
@@ -315,7 +316,7 @@ if __name__ == "__main__":
                 adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step.detach()                
                 adv_text_features     = adv_vit_text_features_in_current_step
                 torch.cuda.empty_cache()
-            query_noise            = torch.randn_like(image_repeat).sign() # Rademacher noise
+            query_noise = torch.randn_like(image_repeat).sign() # Rademacher noise
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
             
             # num_query is obtained via serveral iterations
