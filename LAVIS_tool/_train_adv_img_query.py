@@ -156,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_query", default=20, type=int)
     parser.add_argument("--num_sub_query", default=5, type=int)
     parser.add_argument("--sigma", default=16, type=float)
-    
+    parser.add_argument("--annotation_file", type=str)
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--wandb_project_name", type=str, default='temp_proj')
     parser.add_argument("--wandb_run_name", type=str, default='temp_run')
@@ -316,7 +316,7 @@ if __name__ == "__main__":
                 adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step)
                 adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step / adv_vit_text_features_in_current_step.norm(dim=1, keepdim=True)
                 adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step.detach()                
-                adv_text_features     = adv_vit_text_features_in_current_step
+                adv_text_features                       = adv_vit_text_features_in_current_step
                 torch.cuda.empty_cache()
             query_noise = torch.randn_like(image_repeat).sign() # Rademacher noise
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
