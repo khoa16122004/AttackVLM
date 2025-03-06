@@ -91,6 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", default="temp", type=str, help='the folder name that restore your outputs')
     parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
     parser.add_argument("--target_dir", type=str, help="The folder name contains the target image")
+    parser.add_argument("--annotation_file", type=str)
     parser.add_argument("--model_name", default="blip_caption", type=str)
     parser.add_argument("--model_type", default="base_coco", type=str)
     args = parser.parse_args()
