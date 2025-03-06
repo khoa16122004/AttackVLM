@@ -445,7 +445,7 @@ if __name__ == "__main__":
             )
 
         # log text
-        basename = os.path.basename(gt_path)
+        basename = os.path.basename(gt_path[i])
 
         torchvision.utils.save_image(adv_image_in_current_step, os.path.join(args.output, basename))
         print("best caption of current image:", best_caption)
