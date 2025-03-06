@@ -1,3 +1,4 @@
 target_image
 target_annotations.txt
 test
+test_query
