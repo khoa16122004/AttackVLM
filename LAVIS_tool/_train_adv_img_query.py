@@ -237,7 +237,6 @@ if __name__ == "__main__":
     # baseline results
     vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
     query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
-    print("querry attack results: ", vit_attack_results)
     assert (vit_attack_results == query_attack_results).all()
     
     # ## other arch
@@ -339,7 +338,7 @@ if __name__ == "__main__":
                 else:
                     with torch.no_grad():
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
-                        print("Querry index: ", query_idx)
+                        print("Text of sub perturbed images: ", text_of_sub_perturbed_imgs)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
             
             # step 2. estimate grad
