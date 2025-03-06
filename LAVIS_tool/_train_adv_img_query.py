@@ -331,14 +331,14 @@ if __name__ == "__main__":
             text_of_perturbed_imgs = []
             for query_idx in range(num_query//num_sub_query):
             # for query_idx in range(num_query):
-                print("Querry index: ", query_idx)
+                # print("Querry index: ", query_idx)
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
                 if args.model_name == 'img2prompt_vqa':
                     text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
                 else:
                     with torch.no_grad():
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
-                        print("Text of sub perturbed images: ", text_of_sub_perturbed_imgs)
+                        # print("Text of sub perturbed images: ", text_of_sub_perturbed_imgs)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
             
             # step 2. estimate grad
@@ -360,10 +360,9 @@ if __name__ == "__main__":
             print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
             print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
             
-            print("Range: ", image_clean.max(), delta.max())
+            # print("Range: ", image_clean.max(), delta.max())
             
             adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
-            print("adv_image_in_current_step: ", adv_image_in_current_step)
             # get adv text
             if args.model_name == 'img2prompt_vqa':
                 lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step)
@@ -450,7 +449,7 @@ if __name__ == "__main__":
 
         torchvision.utils.save_image(adv_image_in_current_step / 255.0, os.path.join(args.output, basename))
         torchvision.utils.save_image(image_clean / 255.0, os.path.join(args.output, "clean_" + basename))
-        print("best caption of current image:", best_caption)
+        print("best caption of current image:", lavis_text_of_adv_image_in_current_step)
         with open(os.path.join(args.output + '.txt'), 'a') as f:
             # print(''.join([best_caption]), file=f)
             if better_flag:
