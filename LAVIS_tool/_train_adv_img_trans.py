@@ -60,7 +60,8 @@ if __name__ == "__main__":
     parser.add_argument("--epsilon", default=8, type=int)
     parser.add_argument("--steps", default=300, type=int)
     parser.add_argument("--output", default="temp", type=str, help='the folder name that restore your outputs')
-    
+    parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
+    parser.add_argument("--target_dir", type=str, help="The folder name contains the target image")
     parser.add_argument("--model_name", default="blip_caption", type=str)
     parser.add_argument("--model_type", default="base_coco", type=str)
     args = parser.parse_args()
@@ -80,8 +81,8 @@ if __name__ == "__main__":
     print(f"Done")
     
     # ------------- pre-processing images/text ------------- #
-    imagenet_data = ImageFolderWithPaths("path to raw imagenet val", transform=None) # image data
-    target_data   = ImageFolderWithPaths("dir to your target data", transform=None) # target image data
+    imagenet_data = ImageFolderWithPaths(args.image_dir, transform=None) # image data
+    target_data   = ImageFolderWithPaths(args.target_dir, transform=None) # target image data
     
     
     data_loader_imagenet = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
