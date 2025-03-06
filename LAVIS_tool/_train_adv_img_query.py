@@ -331,13 +331,13 @@ if __name__ == "__main__":
             text_of_perturbed_imgs = []
             # for query_idx in range(num_query//num_sub_query):
             for query_idx in range(num_query):
-                print("Querry index: ", query_idx)
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
                 if args.model_name == 'img2prompt_vqa':
                     text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
                 else:
                     with torch.no_grad():
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
+                        print("Querry index: ", query_idx)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
             
             # step 2. estimate grad
