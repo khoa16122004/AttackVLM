@@ -86,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", default=5, type=int)
     parser.add_argument("--num_samples", default=20, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
-    parser.add_argument("--epsilon", default=1, type=int)
+    parser.add_argument("--epsilon", default=8, type=int)
     parser.add_argument("--steps", default=300, type=int)
     parser.add_argument("--output", default="test", type=str, help='the folder name that restore your outputs')
     parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
@@ -184,7 +184,6 @@ if __name__ == "__main__":
             # folder_to_save = os.path.join('../_output_img', args.output, folder)
             # if not os.path.exists(folder_to_save):
             #     os.makedirs(folder_to_save, exist_ok=True)
-            print("GT path: ", gt_path[path_idx])
             torchvision.utils.save_image(adv_image[path_idx], output_path)
 
         break
