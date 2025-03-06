@@ -108,7 +108,7 @@ if __name__ == "__main__":
     # select and load model
     print(f"Loading LAVIS models: {args.model_name}, model_type: {args.model_type}...")
     blip_model, vis_processors, _ = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
-    print("Output path: ", args.output)
+    # print("Output path: ", args.output)
     os.makedirs(args.output, exist_ok=True)
     # ------------- pre-processing images/text ------------- #
     # imagenet_data = ImageFolderWithPaths(args.image_dir, transform=None) # image data
