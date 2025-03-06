@@ -447,3 +447,4 @@ if __name__ == "__main__":
             else:
                 f.write(best_caption)
         f.close()
+        break
