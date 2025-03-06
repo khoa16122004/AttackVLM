@@ -1,0 +1,2 @@
+python _train_adv_img_query.py --batch_size 10 --num_samples 1 --image_dir images --target_dir images
+python _train_adv_img_query.py --input_res 224 --epsilon 2 --steps 100  --output test_query --data_path images --text_path  --num_query 100 --image_dir images --target_dir target_image/samples
