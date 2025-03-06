@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torchvision
 from PIL import Image
-
+from torch.utils.data import Dataset
 from lavis.models import load_model_and_preprocess
 
 
@@ -51,7 +51,36 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
         # text_processed  = txt_processors["eval"](class_text_all[original_tuple[1]])
         
         return image_processed, original_tuple[1], path
+
+class CustomDataset(Dataset):
+    def __init__(self, annotations_file, image_dir, target_dir):
+        with open(annotations_file, "r") as f:
+            lines = [line.strip().split("\t") for line in f.readlines()]
+            self.file_names = [line[0] for line in lines]
+            self.gt_txts = [line[1] for line in lines]
+            self.tar_txts = [line[2] for line in lines]
+            
+        self.image_dir = image_dir
+        self.target_dir = target_dir
     
+    def __len__(self):
+        return len(self.file_names)
+    
+    def __getitem__(self, idx):
+        image_path = os.path.join(self.image_dir, self.file_names[idx])
+        gt_txt = self.gt_txts[idx]
+        tar_txt = self.tar_txts[idx]
+        target_path = os.path.join(self.target_dir, self.file_names[idx])
+
+        image = Image.open(image_path).convert("RGB")
+        target_image = Image.open(target_path).convert("RGB")
+
+        image_processed = vis_processors["eval"](image)
+        target_image_processed = vis_processors["eval"](target_image)
+        # text_processed  = txt_processors["eval"](class_text_all[original_tuple[1]])
+
+        return image_processed, gt_txt, image_path, target_image_processed, tar_txt, target_path
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", default=5, type=int)
@@ -90,7 +119,8 @@ if __name__ == "__main__":
     inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862954, -0.4578275 / 0.26130258, -0.40821073 / 0.27577711], std=[1.0 / 0.26862954, 1.0 / 0.26130258, 1.0 / 0.27577711])
 
     # start attack
-    for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
+    # for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
+    for i, (image_org, gt_txt, gt_path, image_tgt, target_path) in enumerate(zip(data_loader_imagenet, data_loader_target)):
         if args.batch_size * (i+1) > args.num_samples:
             break
         
@@ -98,7 +128,7 @@ if __name__ == "__main__":
         image_org = image_org.to(device)
         image_tgt = image_tgt.to(device)
         
-        print("Path: ", path)
+        print("Path: ", gt_path, target_path)
         print("Đã load xong image_org và image_target, shape của chúng: ", image_org.shape, image_tgt.shape)
         
         sample_org = {"image": image_org}
@@ -140,8 +170,8 @@ if __name__ == "__main__":
         adv_image = image_org + delta
         adv_image = torch.clamp(inverse_normalize(adv_image), 0.0, 1.0)
         
-        for path_idx in range(len(path)):
-            folder, name = path[path_idx].split("/")[-2], path[path_idx].split("/")[-1]
+        for path_idx in range(len(gt_path)):
+            folder, name = gt_path[path_idx].split("/")[-2], gt_path[path_idx].split("/")[-1]
             folder_to_save = os.path.join('../_output_img', args.output, folder)
             if not os.path.exists(folder_to_save):
                 os.makedirs(folder_to_save, exist_ok=True)

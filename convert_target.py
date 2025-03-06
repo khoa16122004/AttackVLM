@@ -5,13 +5,14 @@ target_image_dir = "target_image/samples"
 original_image = "images"
 print(len(os.listdir(original_image)))
 with open(annotation_file_path, 'r') as f:
-    lines = [line.strip().split()[0] for line in f.readlines()]  # Sửa lỗi split()
+    lines = [line.strip().split("\t")[0] for line in f.readlines()]  # Sửa lỗi split()
 
 for i, img_name in enumerate(sorted(os.listdir(target_image_dir))):
     old_path = os.path.join(target_image_dir, img_name)
     # print(img_name)
-    continue
     new_name = lines[i]  # Cập nhật tên từ annotation
+    print(new_name)
+    continue
     new_path = os.path.join(target_image_dir, new_name)
 
     if os.path.exists(old_path):
