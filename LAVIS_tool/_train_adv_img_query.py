@@ -7,6 +7,7 @@ import torch
 import torchvision
 from PIL import Image
 import wandb
+from torch.utils.data import Dataset
 
 from lavis.common.gradcam import getAttMap
 from lavis.models import load_model_and_preprocess
