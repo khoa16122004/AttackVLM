@@ -179,6 +179,8 @@ if __name__ == "__main__":
     clip_img_model_vitb32, _ = clip.load("ViT-B/32", device=device, jit=False)
     # clip_img_model_vitl14, _ = clip.load("ViT-L/14", device=device, jit=False)
     print("Done")
+    os.makedirs(args.text_query)
+    
     # ---------------------- #
 
     # load clip_model params
@@ -327,7 +329,8 @@ if __name__ == "__main__":
             
             # num_query is obtained via serveral iterations
             text_of_perturbed_imgs = []
-            for query_idx in range(num_query//num_sub_query):
+            # for query_idx in range(num_query//num_sub_query):
+            for query_idx in range(num_query):
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
                 if args.model_name == 'img2prompt_vqa':
                     text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
@@ -439,6 +442,8 @@ if __name__ == "__main__":
             )
 
         # log text
+        torchvision.utils.save_image(adv_image_in_current_step, os.path.join(args.output, os.path.basename(gt_path))
+        
         print("best caption of current image:", best_caption)
         with open(os.path.join(args.output + '.txt'), 'a') as f:
             # print(''.join([best_caption]), file=f)
