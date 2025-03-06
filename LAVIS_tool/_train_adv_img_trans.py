@@ -138,8 +138,6 @@ if __name__ == "__main__":
         
         sample_org = {"image": image_org}
         sample_tgt = {"image": image_tgt}
-        torchvision.utils.save_image(image_org, os.path.join(args.output, "image_org.png"))
-
         
         # extract image features
         with torch.no_grad():
@@ -175,7 +173,6 @@ if __name__ == "__main__":
 
         # save imgs
         adv_image = image_org + delta
-        torchvision.utils.save_image(adv_image, os.path.join(args.output, "adv_.png"))
         adv_image = torch.clamp(adv_image, 0.0, 1.0)
 
         
