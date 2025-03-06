@@ -153,8 +153,8 @@ if __name__ == "__main__":
         # -------- get adv image -------- #
         delta = torch.zeros_like(image_org, requires_grad=True)
         for j in range(args.steps):
-            adv_image          = image_org + delta   # image is normalized to (0.0, 1.0)
-            sample_adv         = {"image": adv_image}
+            adv_image = image_org + delta   # image is normalized to (0.0, 1.0)
+            sample_adv = {"image": adv_image}
             if "blip2" in args.model_name:
                 adv_image_features = blip_model.forward_encoder_image(sample_adv)
             else:
@@ -180,11 +180,11 @@ if __name__ == "__main__":
         print("Done iteration")
         for path_idx in range(len(gt_path)):
             basename = os.path.basename(gt_path[path_idx])
-            print(basename)
+            output_path = os.path.join(args.output, basename)
             # folder, name = gt_path[path_idx].split("/")[-2], gt_path[path_idx].split("/")[-1]
             # folder_to_save = os.path.join('../_output_img', args.output, folder)
             # if not os.path.exists(folder_to_save):
             #     os.makedirs(folder_to_save, exist_ok=True)
-            # torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + 'png')
+            torchvision.utils.save_image(adv_image[path_idx], output_path)
 
         break
