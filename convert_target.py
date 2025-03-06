@@ -11,8 +11,6 @@ for i, img_name in enumerate(sorted(os.listdir(target_image_dir))):
     old_path = os.path.join(target_image_dir, img_name)
     # print(img_name)
     new_name = lines[i]  # Cập nhật tên từ annotation
-    print(new_name)
-    continue
     new_path = os.path.join(target_image_dir, new_name)
 
     if os.path.exists(old_path):
