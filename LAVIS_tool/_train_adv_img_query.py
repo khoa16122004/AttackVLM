@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # tgt text/features
     tgt_text_path = 'target_annotations.txt'
     with open(os.path.join(tgt_text_path), 'r') as f:
-        tgt_text  = f.readlines()[:args.num_samples] # num_samples
+        tgt_text  = f.readlines()[:args.num_samples][4] # num_samples
         f.close()
         # print("target text: ", tgt_text)
     
@@ -337,4 +337,4 @@ if __name__ == "__main__":
                 f.write(lavis_text_of_adv_image_in_current_step[0])
             f.close()
             
-        break
+        # break
