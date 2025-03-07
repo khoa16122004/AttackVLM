@@ -241,8 +241,7 @@ if __name__ == "__main__":
     for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in tqdm(enumerate(data_loader)):
         # print("Target Image: ", image.shape)
         # print("Image clean: ", image_clean.shape)
-        if i != 4:
-            continue
+        
         image = image.to(device)  # size=(10, 3, 224, 224)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
         
@@ -290,7 +289,7 @@ if __name__ == "__main__":
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ =p(x + sigma * noise)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs) # [c_ ] has len = num_query
             
-            print("Text_of_pertubed: ", text_of_perturbed_imgs)
+            # print("Text_of_pertubed: ", text_of_perturbed_imgs)
             
             # step 2. estimate grad => z_^T * g(c_tar) - z^T * g(c_tar)
             with torch.no_grad():
