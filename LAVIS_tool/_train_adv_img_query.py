@@ -201,20 +201,20 @@ if __name__ == "__main__":
 
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=False, num_workers=24)
 
-    # org text/features
-    adv_vit_text_path = args.text_path
-    with open(os.path.join(adv_vit_text_path), 'r') as f:
-        lavis_text_of_adv_vit  = f.readlines()[:args.num_samples] # num_samples
-        print("org text: ", lavis_text_of_adv_vit)
-        f.close()
+    # # org text/features
+    # adv_vit_text_path = args.text_path
+    # with open(os.path.join(adv_vit_text_path), 'r') as f:
+    #     lavis_text_of_adv_vit  = f.readlines()[:args.num_samples] # num_samples
+    #     print("org text: ", lavis_text_of_adv_vit)
+    #     f.close()
     
-    # adv_vit_text_feautes: 
-    with torch.no_grad():
-        adv_vit_text_token    = clip.tokenize(lavis_text_of_adv_vit).to(device)
-        adv_vit_text_features = clip_img_model_vitb32.encode_text(adv_vit_text_token)
-        adv_vit_text_features = adv_vit_text_features / adv_vit_text_features.norm(dim=1, keepdim=True)
-        adv_vit_text_features = adv_vit_text_features.detach() # z_clean = g(c_clean)
-        # print("Text groundtruth shape: ", adv_vit_text_features.shape) # num_samples x 512
+    # # adv_vit_text_feautes: 
+    # with torch.no_grad():
+    #     adv_vit_text_token    = clip.tokenize(lavis_text_of_adv_vit).to(device)
+    #     adv_vit_text_features = clip_img_model_vitb32.encode_text(adv_vit_text_token)
+    #     adv_vit_text_features = adv_vit_text_features / adv_vit_text_features.norm(dim=1, keepdim=True)
+    #     adv_vit_text_features = adv_vit_text_features.detach() # z_clean = g(c_clean)
+    #     # print("Text groundtruth shape: ", adv_vit_text_features.shape) # num_samples x 512
 
     # tgt text/features
     tgt_text_path = 'target_annotations.txt'
