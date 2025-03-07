@@ -303,7 +303,8 @@ if __name__ == "__main__":
             pseudo_gradient = pseudo_gradient.mean(0) # size = (bs, 3, args.input_res, args.input_res)
             
             # step 3. result
-            delta_data = torch.clamp(delta + alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
+            # delta_data = torch.clamp(delta + alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
+            delta_data = torch.clamp(alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
             delta.data = delta_data
                         
             adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
