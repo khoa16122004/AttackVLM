@@ -222,7 +222,7 @@ if __name__ == "__main__":
     with open(os.path.join(tgt_text_path), 'r') as f:
         tgt_text  = f.readlines()[:args.num_samples] # num_samples
         f.close()
-        # print("target text: ", tgt_text)
+        print("target text: ", tgt_text)
     
     # tgt_text = "A dog playing with cat"
     
@@ -288,8 +288,7 @@ if __name__ == "__main__":
                     with torch.no_grad():
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ =p(x + sigma * noise)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs) # [c_ ] has len = num_query
-            
-            print("Text_of_pertubed: ", text_of_perturbed_imgs)
+            print("text_of_perturbed_imgs: ", text_of_perturbed_imgs)
             
             # step 2. estimate grad => z_^T * g(c_tar) - z^T * g(c_tar)
             with torch.no_grad():
