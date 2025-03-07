@@ -79,7 +79,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 class CustomDataset(Dataset):
     def __init__(self, annotations_file, image_dir, target_dir, transform=None):
         with open(annotations_file, "r") as f:
-            lines = [line.strip().split("\t") for line in f.readlines()][4]
+            lines = [line.strip().split("\t") for line in f.readlines()]
             self.file_names = [line[0] for line in lines]
             self.gt_txts = [line[1] for line in lines]
             self.tar_txts = [line[2] for line in lines]
@@ -241,7 +241,8 @@ if __name__ == "__main__":
     for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in tqdm(enumerate(data_loader)):
         # print("Target Image: ", image.shape)
         # print("Image clean: ", image_clean.shape)
-        
+        if i != 4:
+            continue
         image = image.to(device)  # size=(10, 3, 224, 224)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
         
