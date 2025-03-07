@@ -8,7 +8,7 @@ import torchvision
 from PIL import Image
 import wandb
 from torch.utils.data import Dataset
-
+from tqdm import tqdm
 from lavis.common.gradcam import getAttMap
 from lavis.models import load_model_and_preprocess
 
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         adv_vit_text_features = clip_img_model_vitb32.encode_text(adv_vit_text_token)
         adv_vit_text_features = adv_vit_text_features / adv_vit_text_features.norm(dim=1, keepdim=True)
         adv_vit_text_features = adv_vit_text_features.detach() # z_clean = g(c_clean)
-        print("Text groundtruth shape: ", adv_vit_text_features.shape) # num_samples x 512
+        # print("Text groundtruth shape: ", adv_vit_text_features.shape) # num_samples x 512
 
     # tgt text/features
     tgt_text_path = 'target_annotations.txt'
@@ -227,16 +227,16 @@ if __name__ == "__main__":
         target_text_features = clip_img_model_vitb32.encode_text(target_text_token)
         target_text_features = target_text_features / target_text_features.norm(dim=1, keepdim=True)
         target_text_features = target_text_features.detach() # z_tar = g(c_tar)
-        print("Text target shape: ", target_text_features.shape) # num_samples x 512
+        # print("Text target shape: ", target_text_features.shape) # num_samples x 512
 
     
     if args.wandb:
         run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)
     
-    for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in enumerate(data_loader):
+    for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in tqdm(enumerate(data_loader)):
 
-        print("Target Image: ", image.shape)
-        print("Image clean: ", image_clean.shape)
+        # print("Target Image: ", image.shape)
+        # print("Image clean: ", image_clean.shape)
         
         image = image.to(device)  # size=(10, 3, 224, 224)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
@@ -247,12 +247,12 @@ if __name__ == "__main__":
         tgt_text_features = target_text_features[batch_size * (i): batch_size * (i+1)] # z_tar = g(c_tar)
         
         # ------------------- random gradient-free method
-        print("init delta with diff(adv-clean)")
+        # print("init delta with diff(adv-clean)")
         delta = torch.tensor((image - image_clean))
         torch.cuda.empty_cache()
         
         best_caption = lavis_text_of_adv_vit[i]
-        print("GT caption: ", best_caption)
+        # print("GT caption: ", best_caption)
         better_flag = 0
         
         for step_idx in range(args.steps):
@@ -270,7 +270,7 @@ if __name__ == "__main__":
                 adv_text_features                       = adv_vit_text_features_in_current_step #  z = [g(c)]
                 torch.cuda.empty_cache()
                 
-            print("image_repeat shape: ", image_repeat.shape)
+            # print("image_repeat shape: ", image_repeat.shape)
                 
             query_noise = torch.randn_like(image_repeat).sign() # Rademacher noise
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # x + sigma * noise
@@ -280,7 +280,7 @@ if __name__ == "__main__":
             # for query_idx in range(num_query//num_sub_query):
             for query_idx in range(num_query):
                 sub_perturbed_image_repeat = perturbed_image_repeat[batch_size * (query_idx) : batch_size * (query_idx + 1)]
-                print("Sub_pertubed image repeat shape: ", sub_perturbed_image_repeat.shape)
+                # print("Sub_pertubed image repeat shape: ", sub_perturbed_image_repeat.shape)
                 if args.model_name == 'img2prompt_vqa':
                     text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ = p(x + sigma * noise)
                 else:
