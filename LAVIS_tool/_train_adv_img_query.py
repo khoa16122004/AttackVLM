@@ -327,8 +327,8 @@ if __name__ == "__main__":
         with open(os.path.join(args.output + '.txt'), 'a') as f:
             # print(''.join([best_caption]), file=f)
             if better_flag:
-                f.write(lavis_text_of_adv_image_in_current_step+'\n')
+                f.write(lavis_text_of_adv_image_in_current_step[0]+'\n')
             else:
-                f.write(lavis_text_of_adv_image_in_current_step)
+                f.write(lavis_text_of_adv_image_in_current_step[0])
             f.close()
         break
