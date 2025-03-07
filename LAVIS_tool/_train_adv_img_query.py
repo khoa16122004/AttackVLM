@@ -318,7 +318,7 @@ if __name__ == "__main__":
             
            
         # log text
-        basename = os.path.basename(gt_path[i])
+        basename = os.path.basename(gt_path)
 
         torchvision.utils.save_image(adv_image_in_current_step / 255.0, os.path.join(args.output, basename))
         torchvision.utils.save_image(image_clean / 255.0, os.path.join(args.output, "clean_" + basename))
