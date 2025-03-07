@@ -174,11 +174,7 @@ if __name__ == "__main__":
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
     
     # use clip text coder for attack
-    # clip_img_model_rn50,   _ = clip.load("RN50", device=device, jit=False)
-    # clip_img_model_rn101,  _ = clip.load("RN101", device=device, jit=False)
-    # clip_img_model_vitb16, _ = clip.load("ViT-B/16", device=device, jit=False)
     clip_img_model_vitb32, _ = clip.load("ViT-B/32", device=device, jit=False)
-    # clip_img_model_vitl14, _ = clip.load("ViT-L/14", device=device, jit=False)
     print("Done")
     os.makedirs(args.output, exist_ok=True)
     
@@ -196,13 +192,9 @@ if __name__ == "__main__":
         args.input_res = 384
 
     if args.input_res == 384:
-        # vit_adv_data  = ImageFolderWithPaths(args.data_path, transform=transform_a)
-        # clean_data    = ImageFolderWithPaths("path to imagenet-val", transform=transform_a)
         data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir, transform_a)
 
     else:
-        # vit_adv_data  = ImageFolderWithPaths(args.data_path, transform=transform_b)
-        # clean_data    = ImageFolderWithPaths("path to imagenet-val", transform=transform_b)
         data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir, transform_b)
 
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=False, num_workers=24)
@@ -243,7 +235,6 @@ if __name__ == "__main__":
     if args.wandb:
         run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)
     
-    # for i, ((image, _, path), (image_clean, _, _)) in enumerate(zip(data_loader, clean_data_loader)):
     for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in enumerate(data_loader):
 
         if batch_size * (i+1) > args.num_samples:
@@ -286,12 +277,12 @@ if __name__ == "__main__":
             text_of_perturbed_imgs = []
             for query_idx in range(num_query//num_sub_query):
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
+                print("Sub_pertubed image repeat shape: ", sub_perturbed_image_repeat.shape)
                 if args.model_name == 'img2prompt_vqa':
                     text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # f(x + sigma * noise)
                 else:
                     with torch.no_grad():
-                        text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat)
-                        # print("Text of sub perturbed images: ", text_of_sub_perturbed_imgs)
+                        text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # f(x + sigma * noise)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
             
             # step 2. estimate grad
@@ -312,9 +303,7 @@ if __name__ == "__main__":
             delta.data = delta_data
             print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
             print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
-            
-            # print("Range: ", image_clean.max(), delta.max())
-            
+                        
             adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
             # get adv text
             if args.model_name == 'img2prompt_vqa':
