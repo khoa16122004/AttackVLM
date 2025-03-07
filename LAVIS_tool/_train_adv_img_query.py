@@ -224,7 +224,7 @@ if __name__ == "__main__":
         f.close()
         print("target text: ", tgt_text)
     print(len(tgt_text))
-    tgt_text = "A dog playing with cat"
+    tgt_text = "A pig play with bear"
     
     # clip text features of the target
     with torch.no_grad():
