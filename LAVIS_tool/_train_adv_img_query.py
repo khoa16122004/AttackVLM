@@ -238,10 +238,6 @@ if __name__ == "__main__":
         run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)
     
     for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in tqdm(enumerate(data_loader)):
-        if i < 5:
-            continue
-        if i == 6:
-            break
         # print("Target Image: ", image.shape)
         # print("Image clean: ", image_clean.shape)
         
@@ -337,3 +333,5 @@ if __name__ == "__main__":
             else:
                 f.write(lavis_text_of_adv_image_in_current_step[0])
             f.close()
+            
+        break
