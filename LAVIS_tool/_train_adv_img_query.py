@@ -139,6 +139,8 @@ def _i2t(args, txt_processors, model, image):
     return caption_merged
 
 
+
+
 if __name__ == "__main__":
     seedEverything()
     parser = argparse.ArgumentParser()
@@ -202,7 +204,7 @@ if __name__ == "__main__":
     # org text/features
     adv_vit_text_path = args.text_path
     with open(os.path.join(adv_vit_text_path), 'r') as f:
-        lavis_text_of_adv_vit  = f.readlines()[:args.num_samples] 
+        lavis_text_of_adv_vit  = f.readlines()[:args.num_samples] # num_samples
         f.close()
     
     # adv_vit_text_feautes: 
@@ -210,13 +212,13 @@ if __name__ == "__main__":
         adv_vit_text_token    = clip.tokenize(lavis_text_of_adv_vit).to(device)
         adv_vit_text_features = clip_img_model_vitb32.encode_text(adv_vit_text_token)
         adv_vit_text_features = adv_vit_text_features / adv_vit_text_features.norm(dim=1, keepdim=True)
-        adv_vit_text_features = adv_vit_text_features.detach() # g(c_clean)
-        print("Text target shape: ", adv_vit_text_features.shape)
+        adv_vit_text_features = adv_vit_text_features.detach() # z_clean = g(c_clean)
+        print("Text groundtruth shape: ", adv_vit_text_features.shape) # num_samples x 512
 
     # tgt text/features
     tgt_text_path = 'target_annotations.txt'
     with open(os.path.join(tgt_text_path), 'r') as f:
-        tgt_text  = f.readlines()[:args.num_samples] 
+        tgt_text  = f.readlines()[:args.num_samples] # num_samples
         f.close()
     
     # clip text features of the target
@@ -224,8 +226,8 @@ if __name__ == "__main__":
         target_text_token    = clip.tokenize(tgt_text).to(device)
         target_text_features = clip_img_model_vitb32.encode_text(target_text_token)
         target_text_features = target_text_features / target_text_features.norm(dim=1, keepdim=True)
-        target_text_features = target_text_features.detach() # g(c_tar)
-        print("Text target shape: ", target_text_features.shape)
+        target_text_features = target_text_features.detach() # z_tar = g(c_tar)
+        print("Text target shape: ", target_text_features.shape) # num_samples x 512
 
     
     if args.wandb:
@@ -239,9 +241,10 @@ if __name__ == "__main__":
         image = image.to(device)  # size=(10, 3, 224, 224)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
         
+        # batch_size == num_samples
         # obtain all text features (via CLIP text encoder)
-        adv_text_features = adv_vit_text_features[batch_size * (i): batch_size * (i+1)]        
-        tgt_text_features = target_text_features[batch_size * (i): batch_size * (i+1)]
+        adv_text_features = adv_vit_text_features[batch_size * (i): batch_size * (i+1)] # z_clean = g(c_clean)     
+        tgt_text_features = target_text_features[batch_size * (i): batch_size * (i+1)] # z_tar = g(c_tar)
         
         # ------------------- random gradient-free method
         print("init delta with diff(adv-clean)")
@@ -253,23 +256,24 @@ if __name__ == "__main__":
         better_flag = 0
         
         for step_idx in range(args.steps):
-            print(f"{i}-th image - {step_idx}-th step")
+            # print(f"{i}-th image - {step_idx}-th step")
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
             else:
                 image_repeat = adv_image_in_current_step.repeat(num_query, 1, 1, 1)             
-                lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step)
-                adv_vit_text_token_in_current_step      = clip.tokenize(lavis_text_of_adv_image_in_current_step).to(device)
-                adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step)
+                lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step) # c = p(x)
+                adv_vit_text_token_in_current_step      = clip.tokenize(lavis_text_of_adv_image_in_current_step).to(device) # 
+                adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step) # z = g(c_)
                 adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step / adv_vit_text_features_in_current_step.norm(dim=1, keepdim=True)
                 adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step.detach()                
-                adv_text_features                       = adv_vit_text_features_in_current_step #  g(f(x))
+                adv_text_features                       = adv_vit_text_features_in_current_step #  z = [g(c)]
                 torch.cuda.empty_cache()
+                
+            print("image_repeat shape: ", image_repeat.shape)
                 
             query_noise = torch.randn_like(image_repeat).sign() # Rademacher noise
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # x + sigma * noise
-            print("perturbed image repeat shape: ", perturbed_image_repeat.shape)
             
             # num_query is obtained via serveral iterations
             text_of_perturbed_imgs = []
@@ -277,18 +281,18 @@ if __name__ == "__main__":
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
                 print("Sub_pertubed image repeat shape: ", sub_perturbed_image_repeat.shape)
                 if args.model_name == 'img2prompt_vqa':
-                    text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # f(x + sigma * noise)
+                    text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ = p(x + sigma * noise)
                 else:
                     with torch.no_grad():
-                        text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # f(x + sigma * noise)
-                text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
+                        text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ =p(x + sigma * noise)
+                text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs) # [c_ ] has len = num_query
             
-            # step 2. estimate grad
+            # step 2. estimate grad => z_^T * g(c_tar) - z^T * g(c_tar)
             with torch.no_grad():
-                perturb_text_token    = clip.tokenize(text_of_perturbed_imgs).to(device) # g(f(x + sigma * noise))
-                perturb_text_features = clip_img_model_vitb32.encode_text(perturb_text_token)
+                perturb_text_token    = clip.tokenize(text_of_perturbed_imgs).to(device) # [c_ ] has len = num_query
+                perturb_text_features = clip_img_model_vitb32.encode_text(perturb_text_token) # z_ = g(c_)
                 perturb_text_features = perturb_text_features / perturb_text_features.norm(dim=1, keepdim=True)
-                perturb_text_features = perturb_text_features.detach()
+                perturb_text_features = perturb_text_features.detach() # z_ = [g(c_)]
             
             coefficient = torch.sum((perturb_text_features - adv_text_features) * tgt_text_features, dim=-1)  # size = (num_query * batch_size)
             coefficient = coefficient.reshape(num_query, batch_size, 1, 1, 1)
@@ -296,11 +300,9 @@ if __name__ == "__main__":
             pseudo_gradient = coefficient * query_noise / sigma # size = (num_query, batch_size, 3, args.input_res, args.input_res)
             pseudo_gradient = pseudo_gradient.mean(0) # size = (bs, 3, args.input_res, args.input_res)
             
-            # step 3. log metrics
+            # step 3. result
             delta_data = torch.clamp(delta + alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
             delta.data = delta_data
-            print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
-            print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
                         
             adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
             # get adv text
@@ -310,29 +312,7 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step)
             
-            # log sim
-            with torch.no_grad():
-                lavis_text_token = clip.tokenize(lavis_text_of_adv_image_in_current_step).to(device)
-                lavis_text_features_of_adv_image_in_current_step = clip_img_model_vitb32.encode_text(lavis_text_token)
-                lavis_text_features_of_adv_image_in_current_step = lavis_text_features_of_adv_image_in_current_step / lavis_text_features_of_adv_image_in_current_step.norm(dim=1, keepdim=True)
-                lavis_text_features_of_adv_image_in_current_step = lavis_text_features_of_adv_image_in_current_step.detach()
-
-                adv_txt_tgt_txt_score_in_current_step = torch.mean(torch.sum(lavis_text_features_of_adv_image_in_current_step * tgt_text_features, dim=1)).item()
-                
-                # update results
-                if adv_txt_tgt_txt_score_in_current_step > query_attack_results[i]:
-                    query_attack_results[i] = adv_txt_tgt_txt_score_in_current_step
-                    best_caption = lavis_text_of_adv_image_in_current_step[0]
-                    better_flag  = 1
-
-        if args.wandb:
-            wandb.log(
-                {   
-                    "moving-avg-adv-vitb32"  : np.mean(vit_attack_results[:(i+1)]),
-                    "moving-avg-query-vitb32": np.mean(query_attack_results[:(i+1)]),
-                },
-            )
-
+           
         # log text
         basename = os.path.basename(gt_path[i])
 
