@@ -79,7 +79,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 class CustomDataset(Dataset):
     def __init__(self, annotations_file, image_dir, target_dir, transform=None):
         with open(annotations_file, "r") as f:
-            lines = [line.strip().split("\t") for line in f.readlines()][:100]
+            lines = [line.strip().split("\t") for line in f.readlines()][1:]
             self.file_names = [line[0] for line in lines]
             self.gt_txts = [line[1] for line in lines]
             self.tar_txts = [line[2] for line in lines]
