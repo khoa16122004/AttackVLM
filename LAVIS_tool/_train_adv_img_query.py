@@ -256,11 +256,11 @@ if __name__ == "__main__":
         torch.cuda.empty_cache()
         
         better_flag = 0
-        
+        adv_image_in_current_step = image.clone()
         for step_idx in range(args.steps):
             # print(f"{i}-th image - {step_idx}-th step")
             # step 1. obtain purturbed images
-          
+  
             image_repeat = adv_image_in_current_step.repeat(num_query, 1, 1, 1)             
             lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step) # c = p(x)
             adv_vit_text_token_in_current_step      = clip.tokenize(lavis_text_of_adv_image_in_current_step).to(device) # 
