@@ -255,8 +255,6 @@ if __name__ == "__main__":
         delta = torch.tensor((image - image_clean))
         torch.cuda.empty_cache()
         
-        best_caption = lavis_text_of_adv_vit[i]
-        # print("GT caption: ", best_caption)
         better_flag = 0
         
         for step_idx in range(args.steps):
