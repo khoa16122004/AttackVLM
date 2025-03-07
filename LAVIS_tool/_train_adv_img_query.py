@@ -198,7 +198,6 @@ if __name__ == "__main__":
         data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir, transform_b)
 
     data_loader = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=False, num_workers=24)
-    # clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=24)
 
     # org text/features
     adv_vit_text_path = args.text_path
@@ -211,8 +210,9 @@ if __name__ == "__main__":
         adv_vit_text_token    = clip.tokenize(lavis_text_of_adv_vit).to(device)
         adv_vit_text_features = clip_img_model_vitb32.encode_text(adv_vit_text_token)
         adv_vit_text_features = adv_vit_text_features / adv_vit_text_features.norm(dim=1, keepdim=True)
-        adv_vit_text_features = adv_vit_text_features.detach()
-    
+        adv_vit_text_features = adv_vit_text_features.detach() # g(c_clean)
+        print("Text target shape: ", adv_vit_text_features.shape)
+
     # tgt text/features
     tgt_text_path = 'target_annotations.txt'
     with open(os.path.join(tgt_text_path), 'r') as f:
@@ -224,21 +224,18 @@ if __name__ == "__main__":
         target_text_token    = clip.tokenize(tgt_text).to(device)
         target_text_features = clip_img_model_vitb32.encode_text(target_text_token)
         target_text_features = target_text_features / target_text_features.norm(dim=1, keepdim=True)
-        target_text_features = target_text_features.detach()
+        target_text_features = target_text_features.detach() # g(c_tar)
+        print("Text target shape: ", target_text_features.shape)
 
-    # baseline results
-    vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
-    query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
-    assert (vit_attack_results == query_attack_results).all()
-    
     
     if args.wandb:
         run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)
     
     for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in enumerate(data_loader):
 
-        if batch_size * (i+1) > args.num_samples:
-            break
+        print("Target Image: ", image.shape)
+        print("Image clean: ", image_clean.shape)
+        
         image = image.to(device)  # size=(10, 3, 224, 224)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
         
@@ -272,6 +269,7 @@ if __name__ == "__main__":
                 
             query_noise = torch.randn_like(image_repeat).sign() # Rademacher noise
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # x + sigma * noise
+            print("perturbed image repeat shape: ", perturbed_image_repeat.shape)
             
             # num_query is obtained via serveral iterations
             text_of_perturbed_imgs = []
