@@ -277,8 +277,9 @@ if __name__ == "__main__":
             
             # num_query is obtained via serveral iterations
             text_of_perturbed_imgs = []
-            for query_idx in range(num_query//num_sub_query):
-                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
+            # for query_idx in range(num_query//num_sub_query):
+            for query_idx in range(num_query):
+                sub_perturbed_image_repeat = perturbed_image_repeat[batch_size * (query_idx) : batch_size * (query_idx + 1)]
                 print("Sub_pertubed image repeat shape: ", sub_perturbed_image_repeat.shape)
                 if args.model_name == 'img2prompt_vqa':
                     text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ = p(x + sigma * noise)
