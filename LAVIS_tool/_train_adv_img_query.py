@@ -223,8 +223,8 @@ if __name__ == "__main__":
         tgt_text  = f.readlines()[:args.num_samples] # num_samples
         f.close()
         print("target text: ", tgt_text)
-    
-    tgt_text[0] = "A dog playing with cat"
+    print(len(tgt_text))
+    tgt_text = "A dog playing with cat"
     
     # clip text features of the target
     with torch.no_grad():
@@ -232,7 +232,7 @@ if __name__ == "__main__":
         target_text_features = clip_img_model_vitb32.encode_text(target_text_token)
         target_text_features = target_text_features / target_text_features.norm(dim=1, keepdim=True)
         target_text_features = target_text_features.detach() # z_tar = g(c_tar)
-        # print("Text target shape: ", target_text_features.shape) # num_samples x 512
+        print("Text target shape: ", target_text_features.shape) # num_samples x 512
 
     
     if args.wandb:
