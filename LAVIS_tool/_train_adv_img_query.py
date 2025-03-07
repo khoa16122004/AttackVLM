@@ -224,7 +224,7 @@ if __name__ == "__main__":
         f.close()
         print("target text: ", tgt_text)
     
-    # tgt_text = "A dog playing with cat"
+    tgt_text[0] = "A dog playing with cat"
     
     # clip text features of the target
     with torch.no_grad():
@@ -288,7 +288,7 @@ if __name__ == "__main__":
                     with torch.no_grad():
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ =p(x + sigma * noise)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs) # [c_ ] has len = num_query
-            print("text_of_perturbed_imgs: ", text_of_perturbed_imgs)
+            # print("text_of_perturbed_imgs: ", text_of_perturbed_imgs)
             
             # step 2. estimate grad => z_^T * g(c_tar) - z^T * g(c_tar)
             with torch.no_grad():
