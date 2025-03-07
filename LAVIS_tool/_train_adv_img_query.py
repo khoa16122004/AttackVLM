@@ -260,17 +260,15 @@ if __name__ == "__main__":
         for step_idx in range(args.steps):
             # print(f"{i}-th image - {step_idx}-th step")
             # step 1. obtain purturbed images
-            if step_idx == 0:
-                image_repeat = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
-            else:
-                image_repeat = adv_image_in_current_step.repeat(num_query, 1, 1, 1)             
-                lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step) # c = p(x)
-                adv_vit_text_token_in_current_step      = clip.tokenize(lavis_text_of_adv_image_in_current_step).to(device) # 
-                adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step) # z = g(c_)
-                adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step / adv_vit_text_features_in_current_step.norm(dim=1, keepdim=True)
-                adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step.detach()                
-                adv_text_features                       = adv_vit_text_features_in_current_step #  z = [g(c)]
-                torch.cuda.empty_cache()
+          
+            image_repeat = adv_image_in_current_step.repeat(num_query, 1, 1, 1)             
+            lavis_text_of_adv_image_in_current_step = _i2t(args, txt_processors, model, image=adv_image_in_current_step) # c = p(x)
+            adv_vit_text_token_in_current_step      = clip.tokenize(lavis_text_of_adv_image_in_current_step).to(device) # 
+            adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step) # z = g(c_)
+            adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step / adv_vit_text_features_in_current_step.norm(dim=1, keepdim=True)
+            adv_vit_text_features_in_current_step   = adv_vit_text_features_in_current_step.detach()                
+            adv_text_features                       = adv_vit_text_features_in_current_step #  z = [g(c)]
+            torch.cuda.empty_cache()
                 
             # print("image_repeat shape: ", image_repeat.shape)
                 
@@ -329,8 +327,8 @@ if __name__ == "__main__":
         with open(os.path.join(args.output + '.txt'), 'a') as f:
             # print(''.join([best_caption]), file=f)
             if better_flag:
-                f.write(best_caption+'\n')
+                f.write(lavis_text_of_adv_image_in_current_step+'\n')
             else:
-                f.write(best_caption)
-        f.close()
+                f.write(lavis_text_of_adv_image_in_current_step)
+            f.close()
         break
