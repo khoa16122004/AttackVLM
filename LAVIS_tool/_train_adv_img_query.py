@@ -238,7 +238,7 @@ if __name__ == "__main__":
         run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)
     
     for i, (image_clean, gt_txt, gt_path, image , tar_txt, path) in tqdm(enumerate(data_loader)):
-        if i == 2:
+        if i == 5:
             break
         # print("Target Image: ", image.shape)
         # print("Image clean: ", image_clean.shape)
@@ -324,7 +324,10 @@ if __name__ == "__main__":
         torchvision.utils.save_image(image_clean / 255.0, os.path.join(args.output, "clean_" + basename))
         torchvision.utils.save_image(delta_data / 255.0, os.path.join(args.output, "pertu_" + basename))
         
-        print("best caption of current image:", lavis_text_of_adv_image_in_current_step)
+        original_cap = _i2t(args, txt_processors, model, image=image_clean) # c = p(x)
+        print("Adv image's caption:", lavis_text_of_adv_image_in_current_step)
+        print("original cap:", original_cap)
+
         with open(os.path.join(args.output + '.txt'), 'a') as f:
             # print(''.join([best_caption]), file=f)
             if better_flag:
