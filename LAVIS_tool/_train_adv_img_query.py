@@ -14,7 +14,7 @@ from lavis.models import load_model_and_preprocess
 
 # seed for everything
 # credit: https://www.kaggle.com/code/rhythmcam/random-seed-everything
-DEFAULT_RANDOM_SEED = 2023
+DEFAULT_RANDOM_SEED = 22520691
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # basic random seed
@@ -256,7 +256,7 @@ if __name__ == "__main__":
         torch.cuda.empty_cache()
         
         better_flag = 0
-        adv_image_in_current_step = image.clone()
+        adv_image_in_current_step = image_clean.clone()
         for step_idx in range(args.steps):
             # print(f"{i}-th image - {step_idx}-th step")
             # step 1. obtain purturbed images
