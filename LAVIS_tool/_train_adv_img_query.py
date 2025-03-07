@@ -199,6 +199,8 @@ if __name__ == "__main__":
     else:
         data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir, transform_b)
 
+    print(data[0])
+    
     data_loader = torch.utils.data.DataLoader(data[1:], batch_size=batch_size, shuffle=False, num_workers=24)
 
     # # org text/features
