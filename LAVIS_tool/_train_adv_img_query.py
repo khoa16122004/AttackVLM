@@ -247,7 +247,7 @@ if __name__ == "__main__":
         
         # batch_size == num_samples
         # obtain all text features (via CLIP text encoder)
-        adv_text_features = adv_vit_text_features[batch_size * (i): batch_size * (i+1)] # z_clean = g(c_clean)     
+        # adv_text_features = adv_vit_text_features[batch_size * (i): batch_size * (i+1)] # z_clean = g(c_clean)     
         tgt_text_features = target_text_features[batch_size * (i): batch_size * (i+1)] # z_tar = g(c_tar)
         
         # ------------------- random gradient-free method
