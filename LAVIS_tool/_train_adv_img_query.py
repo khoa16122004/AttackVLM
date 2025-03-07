@@ -205,6 +205,7 @@ if __name__ == "__main__":
     adv_vit_text_path = args.text_path
     with open(os.path.join(adv_vit_text_path), 'r') as f:
         lavis_text_of_adv_vit  = f.readlines()[:args.num_samples] # num_samples
+        print("org text: ", lavis_text_of_adv_vit)
         f.close()
     
     # adv_vit_text_feautes: 
@@ -220,6 +221,9 @@ if __name__ == "__main__":
     with open(os.path.join(tgt_text_path), 'r') as f:
         tgt_text  = f.readlines()[:args.num_samples] # num_samples
         f.close()
+        print("target text: ", tgt_text)
+        
+
     
     # clip text features of the target
     with torch.no_grad():
@@ -288,6 +292,7 @@ if __name__ == "__main__":
                     with torch.no_grad():
                         text_of_sub_perturbed_imgs = _i2t(args, txt_processors, model, image=sub_perturbed_image_repeat) # c_ =p(x + sigma * noise)
                 text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs) # [c_ ] has len = num_query
+            
             
             # step 2. estimate grad => z_^T * g(c_tar) - z^T * g(c_tar)
             with torch.no_grad():
