@@ -198,6 +198,8 @@ def main():
     torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, "zo_" + basename))
 
     print("Differecen perutbation: ", (fo_gradient - zo_gradient).mean())
-    
+    print("FO gradient mean: ", fo_gradient.abs().mean().item())
+    print("ZO gradient mean: ", zo_gradient.abs().mean().item())
+
 if __name__ == "__main__":
     main()
