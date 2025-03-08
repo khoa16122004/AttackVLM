@@ -154,7 +154,7 @@ def main():
     print("Fo adv cap: ", fo_adv_cap)
     print("FO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model).T)
     print("FO difference: ", image_adv - image)
-    torchvision.utils.save_image(fo_adv_cap, os.path.join(args.output_dir, basename))
+    torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
 
 
 
