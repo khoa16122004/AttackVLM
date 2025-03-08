@@ -94,7 +94,7 @@ def FO_Attack(args, image, image_tar, model):
     image_.requires_grad = True
     image_feauture = blip_image_encoder(image_, model)
     image_tar_feauture = blip_image_encoder(image_tar_, model)
-    loss = image_feauture @ image_tar_feauture.T
+    loss = torch.sum(image_feauture * image_tar_feauture)
     loss.backward()
     gradient = image_.grad.data.sign()
     pertubtation = torch.clamp(args.alpha * gradient, -args.epsilon, args.epsilon)
