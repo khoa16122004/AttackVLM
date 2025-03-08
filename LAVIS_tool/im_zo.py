@@ -112,22 +112,40 @@ def FO_Attack(args, image, image_tar, model):
 def ZO_Attack(args, image, image_tar, model):
     image_adv = image.clone().detach()
     image_tar_ = image_tar.clone().detach()
-
+    
+    # Get the initial feature representation
+    image_tar_feature = blip_image_encoder(image_tar_, model, gradient=False)
+    
+    # Create a tensor to keep track of the best gradient estimate
+    gradient = torch.zeros_like(image_adv)
+    
     for i in tqdm(range(args.steps)):
-        image_feature = blip_image_encoder(image_adv, model)
-        image_tar_feature = blip_image_encoder(image_tar_, model)
+        # Reset the gradient estimate for this step
+        step_gradient = torch.zeros_like(image_adv)
         
-        image_repeat = image_adv.repeat(args.num_query, 1, 1, 1)
-        noise = torch.randn_like(image_repeat) * args.sigma
-        image_pertubed = torch.clamp(image_repeat + noise, 0, 1)
-        image_pertubed_feature = blip_image_encoder(image_pertubed, model)
+        # Perform queries to estimate gradient
+        for q in range(args.num_query):
+            # Generate random perturbation
+            u = torch.randn_like(image_adv) * args.sigma
+            
+            # Evaluate function at x + u and x - u
+            f_plus = blip_image_encoder(torch.clamp(image_adv + u, 0, 1), model, gradient=False)
+            f_minus = blip_image_encoder(torch.clamp(image_adv - u, 0, 1), model, gradient=False)
+            
+            # Compute loss values (similarity with target image features)
+            loss_plus = torch.sum(f_plus * image_tar_feature)
+            loss_minus = torch.sum(f_minus * image_tar_feature)
+            
+            # Estimate gradient using finite differences
+            step_gradient += (loss_plus - loss_minus) * u / (2 * args.sigma * args.num_query)
         
-        coeficient = image_pertubed_feature - image_feature # num_query * 768
-        coeficient = torch.sum(coeficient * image_tar_feature, dim=1)
-        gradient = (coeficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0)  
-        delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
-        image_adv = torch.clamp(image_adv + args.alpha * torch.sign(delta), 0, 1) 
-
+        # Update the cumulative gradient
+        gradient = step_gradient
+        
+        # Apply the estimated gradient to update the image
+        pertubtation = torch.clamp(args.alpha * torch.sign(gradient), -args.epsilon, args.epsilon)
+        image_adv = torch.clamp(image_adv + pertubtation, 0, 1)
+    
     return image_adv, gradient
 
 def check(fo_v, zo_v):
