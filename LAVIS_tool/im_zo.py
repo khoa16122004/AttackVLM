@@ -126,9 +126,18 @@ def ZO_Attack(args, image, image_tar, model):
         coeficient = torch.sum(coeficient * image_tar_feature, dim=1)
         gradient = (coeficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0)  
         delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
-        image_adv = torch.clamp(image_adv + args.alpha * delta, 0, 1) 
+        image_adv = torch.clamp(image_adv + args.alpha * torch.sign(delta), 0, 1) 
 
     return image_adv, gradient
+
+def check(fo_v, zo_v):
+    check = 0
+    for i in range(fo_v.shape[0]):
+        if fo_v[i] == zo_v[i]:
+            check += 1
+    
+    print(check)
+        
 
 def blip_image_encoder(image, model, gradient=True):
     if gradient == True:
@@ -197,8 +206,8 @@ def main():
     torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, "zo_" + basename))
 
     print("Differecen perutbation: ", (fo_gradient - zo_gradient).mean())
-    print("FO gradient mean: ", fo_gradient.abs().mean().item())
-    print("ZO gradient mean: ", zo_gradient.abs().mean().item())
 
+
+    check(fo_gradient.sign(), zo_gradient.sign())
 if __name__ == "__main__":
     main()
