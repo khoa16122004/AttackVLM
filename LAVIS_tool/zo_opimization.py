@@ -163,10 +163,10 @@ def main():
     # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
     coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
     print("coefficient: ", coefficient.shape)
-    coefficient = (coefficient @ target_feature.T)    # num_query
+    coefficient = (coefficient @ target_feature.T)    # num_query x 1
     print("coefficient 1: ", coefficient.shape)
 
-    pseudo_gradient = coefficient * noise
+    pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
     print("pseudo_gradient: ", pseudo_gradient.shape)
     pseudo_gradient = torch.sum(pseudo_gradient, dim=1) / (args.num_query * args.sigma)
     print("pseudo_gradient 1:", pseudo_gradient.shape)
