@@ -126,7 +126,7 @@ def ZO_Attack(args, image, image_tar, model):
         step_gradient = torch.zeros_like(image_adv)
         
         # Process queries in sub-batches to avoid memory issues
-        query_batch_size = min(args.num_query, 10)  # Adjust this based on your GPU memory
+        query_batch_size = args.num_query  # Adjust this based on your GPU memory
         num_sub_batches = args.num_query // query_batch_size
         
         for sb in range(num_sub_batches):
