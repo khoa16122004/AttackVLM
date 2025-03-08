@@ -107,6 +107,30 @@ def FO_Attack(args, image, image_tar, model):
         image_adv.grad.zero_()
 
     return image_adv, gradient
+
+
+def ZO_Attack(args, image, image_tar, model):
+    image_adv = image.clone().detach()
+    image_tar_ = image_tar.clone().detach()
+
+    for i in tqdm(range(args.steps)):
+        image_feature = blip_image_encoder(image_adv, model)
+        image_tar_feature = blip_image_encoder(image_tar_, model)
+        
+        image_repeat = image_adv.repeat(args.num_query, 1, 1, 1)
+        noise = torch.randn_like(image_repeat)
+        image_pertubed = torch.clamp(image_repeat + noise * args.sigma, 0, 1)
+        image_pertubed_feature = blip_image_encoder(image_pertubed, model)
+        
+        coeficient = image_pertubed_feature - image_feature
+        coeficient = coeficient @ image_tar_feature.T
+        gradient = coeficient.view(args.num_query, 1, 1, 1) * noise
+        gradient = torch.sum(gradient, dim=0)
+        delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
+        image_adv = torch.clamp(image_adv + delta, 0, 1)
+
+    return image_adv, gradient
+
 def blip_image_encoder(image, model, gradient=True):
     if gradient == True:
         image_feauture = model.forward_encoder({"image": image})[:,0,:]
@@ -155,7 +179,7 @@ def main():
     print("oriignal loss: ", blip_image_encoder(image, model) @ blip_image_encoder(target_image, model).T)
 
     # ----------------- FO attack -------------------
-    image_adv, gradient = FO_Attack(args, image, target_image, model)
+    image_adv, fo_gradient = FO_Attack(args, image, target_image, model)
     fo_adv_cap = p(model, image_adv)
     print("Fo adv cap: ", fo_adv_cap)
     print("FO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model).T)
@@ -165,7 +189,15 @@ def main():
     torchvision.utils.save_image(target_image, os.path.join(args.output_dir, "tar_" + basename))
 
 
+    # ------------------- ZO attack -------------------
+    image_adv, zo_gradient = ZO_Attack(args, image, target_image, model)
+    zo_adv_cap = p(model, image_adv)
+    print("Zo adv cap: ", zo_adv_cap)
+    print("ZO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model).T)
+    print("ZO difference: ", (image_adv - image).mean())
+    torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, "zo_" + basename))
 
+    print("Differecen perutbation: ", (fo_gradient - zo_gradient))
     
 if __name__ == "__main__":
     main()
