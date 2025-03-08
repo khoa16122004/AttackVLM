@@ -118,16 +118,15 @@ def ZO_Attack(args, image, image_tar, model):
         image_tar_feature = blip_image_encoder(image_tar_, model)
         
         image_repeat = image_adv.repeat(args.num_query, 1, 1, 1)
-        noise = torch.randn_like(image_repeat)
-        image_pertubed = torch.clamp(image_repeat + noise * args.sigma, 0, 1)
+        noise = torch.randn_like(image_repeat) * args.sigma  # Điều chỉnh nhiễu theo sigma
+        image_pertubed = torch.clamp(image_repeat + noise, 0, 1)
         image_pertubed_feature = blip_image_encoder(image_pertubed, model)
         
-        coeficient = image_pertubed_feature - image_feature
+        coeficient = (image_pertubed_feature - image_feature).mean(dim=0)  # Trung bình trên batch
         coeficient = coeficient @ image_tar_feature.T
-        gradient = coeficient.view(args.num_query, 1, 1, 1) * noise
-        gradient = torch.sum(gradient, dim=0)
+        gradient = (coeficient.view(1, 1, 1, 1) * noise).mean(dim=0)  # Trung bình để giảm nhiễu
         delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
-        image_adv = torch.clamp(image_adv + delta, 0, 1)
+        image_adv = torch.clamp(image_adv + args.lr * delta, 0, 1)  # Thêm learning rate để kiểm soát cập nhật
 
     return image_adv, gradient
 
