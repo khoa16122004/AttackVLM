@@ -93,7 +93,7 @@ def FO_Attack(args, image, image_tar, model):
     image_tar_ = image_tar.clone().detach()
     image_.requires_grad = True
     image_feauture = model.forward_encoder({"image": image_})
-    image_tar_feauture = model.forward_encodere({"image": image_tar_})
+    image_tar_feauture = model.forward_encoder({"image": image_tar_})
     loss = image_feauture @ image_tar_feauture.T
     loss.backward()
     gradient = image.grad.data.sign()
