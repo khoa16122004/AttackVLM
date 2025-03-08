@@ -111,7 +111,7 @@ def main():
     parser.add_argument("--model_type", default="base_coco", type=str)
     args = parser.parse_args()
     
-    
+    seedEverything()
     # ----------------------- Our problem ----------------------
     """
         c_tar: the target_text
