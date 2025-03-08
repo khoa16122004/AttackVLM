@@ -125,8 +125,8 @@ def ZO_Attack(args, image, image_tar, model):
         coeficient = image_pertubed_feature - image_feature # num_query * 768
         coeficient = torch.sum(coeficient * image_tar_feature, dim=1)
         gradient = (coeficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0)  
-        delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
-        image_adv = torch.clamp(image_adv + args.alpha * torch.sign(delta), 0, 1) 
+        delta = torch.clamp(args.alpha * torch.sign(gradient), -args.epsilon, args.epsilon)
+        image_adv = torch.clamp(image_adv + delta, 0, 1) 
 
     return image_adv, gradient
 
@@ -208,6 +208,6 @@ def main():
     print("Differecen perutbation: ", (fo_gradient - zo_gradient).mean())
     print("FO gradient mean: ", fo_gradient.abs().mean().item())
     print("ZO gradient mean: ", zo_gradient.abs().mean().item())
-
+ 
 if __name__ == "__main__":
     main()
