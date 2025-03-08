@@ -171,15 +171,17 @@ def main():
     img_adv = image + delta
     img_adv = torch.clamp(img_adv, 0.0, 255.0)
     
+    adv_text_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
+    loss = adv_text_feature @ target_feature.T
+    
+    print("adv Loss: ", loss)
+    print("adv txt: ", p(model, img_adv))
+    
     # save_image
     basename = os.path.basename(image_path)
     torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output_dir, basename))
 
-    image_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
-    loss = image_feature @ target_feature.T
-    
-    print("adv Loss: ", loss)
-    print("adv txt: ", p(model, img_adv))
+
     
 if __name__ == "__main__":
     main()
