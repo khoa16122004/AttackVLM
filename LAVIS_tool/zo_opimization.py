@@ -80,13 +80,14 @@ normalize = torchvision.transforms.Compose(
         torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
     ]
 )
+@torch.no_grad
 def p(model, image):
     image = normalize(image / 255.0)
     samples  = {"image": image}
     caption  = model.generate(samples, use_nucleus_sampling=True, num_captions=1)
     return caption
 
-
+@torch.no_grad
 def clip_encode_text(txt, clip_model, detach=True):
     text_token = clip.tokenize(txt).to(device)
     target_text_features = clip_model.encode_text(text_token)
@@ -100,7 +101,7 @@ def main():
     parser.add_argument("--img_index", type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=float)
-    parser.add_argument("--num_query", default="100", type=str)
+    parser.add_argument("--num_query", default=100, type=int)
     parser.add_argument("--output_dir", default="zo", type=str)
     parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
     parser.add_argument("--target_dir", type=str, help="The folder name contains the target image")    
