@@ -103,8 +103,7 @@ def FO_Attack(args, image, image_tar, model):
     return image_adv, gradient
 def blip_image_encoder(image, model, gradient=True):
     if gradient == True:
-        image_ = image.clone().detach()
-        image_feauture = model.forward_encoder({"image": image_})[:,0,:]
+        image_feauture = model.forward_encoder({"image": image})[:,0,:]
         image_feauture = image_feauture / image_feauture.norm(dim=1, keepdim=True)
     else:
         with torch.no_grad():
