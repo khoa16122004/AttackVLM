@@ -169,12 +169,15 @@ def main():
 
     pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
     pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
+    print("Coefficient mean:", coefficient.mean().item(), "std:", coefficient.std().item())
     delta = torch.clamp(args.alpha * pseudo_gradient, -args.epsilon, args.epsilon)
-    
+    print("Delta mean:", delta.mean().item(), "std:", delta.std().item())
+
     # x + delta
     img_adv = image + delta
     img_adv = torch.clamp(img_adv, 0.0, 255.0)
-    
+    print("Image difference:", torch.abs(img_adv - image).mean().item())
+
     adv_text_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
     loss = adv_text_feature @ target_feature.T
     
