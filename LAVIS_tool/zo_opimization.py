@@ -139,7 +139,7 @@ def main():
     image, gt_txt, image_path, target_image, tar_txt, target_path = data[args.img_index]
     
     image = image.to(device).unsqueeze(0)
-    clean_txt = p(model, image)
+    clean_txt = p(model, image)[0]
     clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
     print("Clean txt: ", clean_txt)
     print("target txt: ", tar_txt)
@@ -147,8 +147,7 @@ def main():
     target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
     
     # original loss
-    image_feature = clip_encode_text(p(model, image.clone().detach()), clip_img_model_vitb32)
-    loss = image_feature @ target_feature.T
+    loss = clean_txt_embedding @ target_feature.T
     print("original loss: ", loss)
     
     # x + sigma * noise 
