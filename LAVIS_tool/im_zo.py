@@ -92,8 +92,8 @@ def FO_Attack(args, image, image_tar, model):
     image_ = image.clone().detach()
     image_tar_ = image_tar.clone().detach()
     image_.requires_grad = True
-    image_feauture = model.forward_encoder({"image": image_})
-    image_tar_feauture = model.forward_encoder({"image": image_tar_})
+    image_feauture = blip_image_encoder(image_, model)
+    image_tar_feauture = blip_image_encoder(image_tar_, model)
     loss = image_feauture @ image_tar_feauture.T
     loss.backward()
     gradient = image.grad.data.sign()
@@ -102,6 +102,12 @@ def FO_Attack(args, image, image_tar, model):
     
     return image_adv, gradient
 
+@torch.no_grad()
+def blip_image_encoder(image, model):
+    image_ = image.clone().detach()
+    image_feauture = model.forward_encoder({"image": image_})[:,0,:]
+    image_feauture = image_feauture / image_feauture.norm(dim=1, keepdim=True)
+    return image_feauture
 
 def main():
     parser = argparse.ArgumentParser()
@@ -137,13 +143,13 @@ def main():
     target_image = target_image.to(device).unsqueeze(0)
     print(image.shape, target_image.shape)
     
-    print("oriignal loss: ", model.forward_encoder({"image": image}) @ model.forward_encoder({"image": target_image}))
+    print("oriignal loss: ", blip_image_encoder(image, model) @ blip_image_encoder(target_image, model))
 
     # ----------------- FO attack -------------------
     image_adv, gradient = FO_Attack(args, image, target_image, model)
     fo_adv_cap = p(model, image_adv)
     print("Fo adv cap: ", fo_adv_cap)
-    print("FO loss: ", model.forward_encoder({"image": image_adv}) @ model.forward_encoder({"image": target_image}))
+    print("FO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model))
     print("FO difference: ", image_adv - image)
     torchvision.utils.save_image(fo_adv_cap, os.path.join(args.output_dir, basename))
 
