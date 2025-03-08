@@ -185,8 +185,8 @@ def main():
             best_loss = loss
             best_adv_img = img_adv
             best_cap =  p(model, img_adv)           
-        print(f"[Step {step}] adv Loss: ", loss)
-        print(f"[Step {step}] adv txt: ", p(model, img_adv))
+            
+        print(f"[Step {step}] adv Loss: {loss}, loss adv txt: {adv_cap}")
         
     # save_image
     print("Best loss: ", best_loss)
