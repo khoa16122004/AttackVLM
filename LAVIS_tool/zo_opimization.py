@@ -142,12 +142,13 @@ def main():
     clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
     print("Clean txt: ", clean_txt)
     
+    # g(c_tar)
+    target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
+    
+    # original loss
     image_feature = clip_encode_text(p(model, image.clone().detach()), clip_img_model_vitb32)
     loss = image_feature @ target_feature.T
     print("original loss: ", loss)
-    
-    # g(c_tar)
-    target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
     
     # x + sigma * noise 
     image_repeat = image.repeat(args.num_query, 1, 1, 1)
