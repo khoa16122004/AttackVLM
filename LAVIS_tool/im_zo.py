@@ -135,13 +135,13 @@ def main():
     
     image = image.to(device).unsqueeze(0)
     target_image = target_image.to(device).unsqueeze(0)
-    print("oriignal loss: ", model.forward_encoder_image(image) @ model.forward_encoder_image(target_image))
+    print("oriignal loss: ", model.forward_encoder(image) @ model.forward_encoder(target_image))
 
     # ----------------- FO attack -------------------
     image_adv, gradient = FO_Attack(args, image, target_image, model)
     fo_adv_cap = p(model, image_adv)
     print("Fo adv cap: ", fo_adv_cap)
-    print("FO loss: ", model.forward_encoder_image(image_adv) @ model.forward_encoder_image(target_image))
+    print("FO loss: ", model.forward_encoder(image_adv) @ model.forward_encoder(target_image))
     print("FO difference: ", image_adv - image)
     torchvision.utils.save_image(fo_adv_cap, os.path.join(args.output_dir, basename))
 
