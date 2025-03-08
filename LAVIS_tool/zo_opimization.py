@@ -89,11 +89,11 @@ def p(model, image):
 
 def clip_encode_text(txt, clip_model, detach=True):
     text_token = clip.tokenize(txt).to(device)
-    text_token_features = clip_model.encode_text(text_token)
+    target_text_features = clip_model.encode_text(text_token)
     target_text_features = target_text_features / target_text_features.norm(dim=1, keepdim=True)
     if detach == True:
         target_text_features = target_text_features.detach()
-    return text_token_features
+    return target_text_features
 
 def main():
     parser = argparse.ArgumentParser()
