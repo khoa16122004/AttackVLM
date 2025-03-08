@@ -168,7 +168,7 @@ def main():
 
     pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
     print("pseudo_gradient: ", pseudo_gradient.shape)
-    pseudo_gradient = torch.sum(pseudo_gradient, dim=1) / (args.num_query * args.sigma)
+    pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
     print("pseudo_gradient 1:", pseudo_gradient.shape)
     # 
     
