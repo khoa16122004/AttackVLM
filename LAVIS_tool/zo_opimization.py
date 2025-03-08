@@ -100,6 +100,7 @@ def clip_encode_text(txt, clip_model, detach=True):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--img_index", type=int)
+    parser.add_argument("--steps", default=8, type=int)
     parser.add_argument("--alpha", default=8, type=float)
     parser.add_argument("--epsilon", default=8, type=float)
     parser.add_argument("--sigma", default=16, type=float)
@@ -152,38 +153,36 @@ def main():
     # original loss
     loss = clean_txt_embedding @ target_feature.T
     print("original loss: ", loss)
-    
-    
+    img_adv = image.clone()
+    for step in range(args.steps):
     # x + sigma * noise 
-    image_repeat = image.repeat(args.num_query, 1, 1, 1)
-    noise = torch.randn_like(image_repeat).sign()
-    perturbed_image_repeat = torch.clamp(image_repeat + (args.sigma * noise), 0.0, 255.0)    
-    
-    # c = p(x + sigma * noise)
-    pertubed_txt = p(model, perturbed_image_repeat)
-    pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
-    
-    # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
-    coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
-    coefficient = (coefficient @ target_feature.T)    # num_query x 1
+        image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
 
-    pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
-    pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
-    print("Coefficient mean:", coefficient.mean().item(), "std:", coefficient.std().item())
-    delta = torch.clamp(args.alpha * pseudo_gradient.sign(), -args.epsilon, args.epsilon)
-    print("Delta mean:", delta.mean().item(), "std:", delta.std().item())
+        noise = torch.randn_like(image_repeat).sign()
+        perturbed_image_repeat = torch.clamp(image_repeat + (args.sigma * noise), 0.0, 255.0)    
+        
+        # c = p(x + sigma * noise)
+        pertubed_txt = p(model, perturbed_image_repeat)
+        pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
+        
+        # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
+        coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
+        coefficient = (coefficient @ target_feature.T)    # num_query x 1
 
-    # x + delta
-    img_adv = image + delta
-    img_adv = torch.clamp(img_adv, 0.0, 255.0)
-    print("Image difference:", torch.abs(img_adv - image).mean().item())
+        pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
+        pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
+        delta = torch.clamp(args.alpha * pseudo_gradient.sign(), -args.epsilon, args.epsilon)
 
-    adv_text_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
-    loss = adv_text_feature @ target_feature.T
-    
-    print("adv Loss: ", loss)
-    print("adv txt: ", p(model, img_adv))
-    
+        # x + delta
+        img_adv = img_adv + delta
+        img_adv = torch.clamp(img_adv, 0.0, 255.0)
+
+        adv_text_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
+        loss = adv_text_feature @ target_feature.T
+        
+        print(f"[Step {step}] adv Loss: ", loss)
+        print(f"[Step {step}] adv txt: ", p(model, img_adv))
+        
     # save_image
     basename = os.path.basename(image_path)
     torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output_dir, basename))
