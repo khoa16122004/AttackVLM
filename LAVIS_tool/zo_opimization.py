@@ -169,7 +169,7 @@ def main():
 
     pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
     pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
-    delta = torch.clamp(args.alpha * - pseudo_gradient, -args.epsilon, args.epsilon)
+    delta = torch.clamp(args.alpha * pseudo_gradient, -args.epsilon, args.epsilon)
     
     # x + delta
     img_adv = image + delta
