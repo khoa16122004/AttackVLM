@@ -146,7 +146,7 @@ def main():
     print("Clean txt: ", clean_txt)
     print("target txt: ", tar_txt)
     # g(c_tar)
-    target_feature = clip_encode_text("two dogs and a tanks", 
+    target_feature = clip_encode_text(tar_txt, 
                                       clip_img_model_vitb32)
     
     # original loss
