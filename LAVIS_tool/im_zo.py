@@ -89,16 +89,18 @@ def clip_encode_text(txt, clip_model, detach=True):
     return target_text_features
 
 def FO_Attack(args, image, image_tar, model):
-    image_ = image.clone().detach()
+    image_adv = image.clone().detach()
     image_tar_ = image_tar.clone().detach()
-    image_.requires_grad = True
-    image_feauture = blip_image_encoder(image_, model)
-    image_tar_feauture = blip_image_encoder(image_tar_, model)
-    loss = torch.sum(image_feauture * image_tar_feauture)
-    loss.backward()
-    gradient = image_.grad.data.sign()
-    pertubtation = torch.clamp(args.alpha * gradient, -args.epsilon, args.epsilon)
-    image_adv = torch.clamp(image_ + pertubtation, 0, 1)
+    
+    for i in tqdm(range(args.steps)):
+        image_adv.requires_grad = True
+        image_feauture = blip_image_encoder(image_, model)
+        image_tar_feauture = blip_image_encoder(image_tar_, model)
+        loss = torch.sum(image_feauture * image_tar_feauture)
+        loss.backward()
+        gradient = image_adv.grad.data.sign()
+        pertubtation = torch.clamp(args.alpha * gradient, -args.epsilon, args.epsilon)
+        image_adv = torch.clamp(image_adv + pertubtation, 0, 1)
     
     return image_adv, gradient
 def blip_image_encoder(image, model, gradient=True):
@@ -156,6 +158,7 @@ def main():
     print("FO difference: ", (image_adv - image).mean())
     torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
     torchvision.utils.save_image(image, os.path.join(args.output_dir, "ori_" + basename))
+    torchvision.utils.save_image(target_image, os.path.join(args.output_dir, "tar_" + basename))
 
 
 
