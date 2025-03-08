@@ -145,3 +145,6 @@ def main():
     loss.backward()
     grad = image.grad.detach()
     print("gt gradient shape:", grad.shape)
+    
+if __name__ == "__main__":
+    main()
