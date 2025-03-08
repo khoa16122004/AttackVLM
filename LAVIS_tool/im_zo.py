@@ -62,7 +62,8 @@ class CustomDataset(Dataset):
 
         image = Image.open(image_path).convert("RGB")
         target_image = Image.open(target_path).convert("RGB")
-
+        image = self.vis_processors["eval"](image)
+        target_image = self.vis_processors["eval"](target_image)
        
         
         return image, gt_txt, image_path, target_image, tar_txt, target_path
