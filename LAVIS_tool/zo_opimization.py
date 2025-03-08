@@ -155,6 +155,7 @@ def main():
     loss = clean_txt_embedding @ target_feature.T
     print("original loss: ", loss)
     img_adv = image.clone()
+    best_loss = 0
     for step in tqdm(range(args.steps)):
     # x + sigma * noise 
         image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
@@ -177,16 +178,21 @@ def main():
         # x + delta
         img_adv = img_adv + delta
         img_adv = torch.clamp(img_adv, 0.0, 255.0)
-
-        adv_text_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
+        adv_cap = p(model, img_adv)
+        adv_text_feature = clip_encode_text(adv_cap, clip_img_model_vitb32)
         loss = adv_text_feature @ target_feature.T
-        
+        if loss > best_loss:
+            best_loss = loss
+            best_adv_img = img_adv
+            best_cap =  p(model, img_adv)           
         print(f"[Step {step}] adv Loss: ", loss)
         print(f"[Step {step}] adv txt: ", p(model, img_adv))
         
     # save_image
+    print("Best loss: ", best_loss)
+    print("Best adv txt: ", best_cap)
     basename = os.path.basename(image_path)
-    torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output_dir, basename))
+    torchvision.utils.save_image(best_adv_img / 255.0, os.path.join(args.output_dir, basename))
 
 
     
