@@ -94,7 +94,7 @@ def FO_Attack(args, image, image_tar, model):
     
     for i in tqdm(range(args.steps)):
         image_adv.requires_grad = True
-        image_feauture = blip_image_encoder(image_, model)
+        image_feauture = blip_image_encoder(image_adv, model)
         image_tar_feauture = blip_image_encoder(image_tar_, model)
         loss = torch.sum(image_feauture * image_tar_feauture)
         loss.backward()
