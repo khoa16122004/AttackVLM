@@ -155,6 +155,7 @@ def main():
     print("FO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model).T)
     print("FO difference: ", (image_adv - image).mean())
     torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
+    torchvision.utils.save_image(image, os.path.join(args.output_dir, "ori_" + basename))
 
 
 
