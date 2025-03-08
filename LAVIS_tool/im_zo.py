@@ -126,7 +126,7 @@ def ZO_Attack(args, image, image_tar, model):
         coeficient = coeficient @ image_tar_feature.T
         gradient = (coeficient.view(1, 1, 1, 1) * noise).mean(dim=0)  # Trung bình để giảm nhiễu
         delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
-        image_adv = torch.clamp(image_adv + args.lr * delta, 0, 1)  # Thêm learning rate để kiểm soát cập nhật
+        image_adv = torch.clamp(image_adv + args.alpha * delta, 0, 1)  # Thêm learning rate để kiểm soát cập nhật
 
     return image_adv, gradient
 
