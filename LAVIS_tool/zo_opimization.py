@@ -126,7 +126,7 @@ def main():
     
     os.makedirs(args.output_dir, exist_ok=True)
     # ---------------------- Model --------------------
-    clip_img_model_vitb32, _ = clip.load("ViT-B/32", device=device, jit=False)
+    clip_img_model_vitb32, _ = clip.load("ViT-L/14", device=device)
     clip_img_model_vitb32.eval()
 
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
