@@ -100,7 +100,7 @@ def clip_encode_text(txt, clip_model, detach=True):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--img_index", type=int)
-    parser.add_argument("--alpha", default=1.0, type=float)
+    parser.add_argument("--alpha", default=8, type=float)
     parser.add_argument("--epsilon", default=8, type=float)
     parser.add_argument("--sigma", default=16, type=float)
     parser.add_argument("--num_query", default=100, type=int)
@@ -170,7 +170,7 @@ def main():
     pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
     pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
     print("Coefficient mean:", coefficient.mean().item(), "std:", coefficient.std().item())
-    delta = torch.clamp(args.alpha * pseudo_gradient, -args.epsilon, args.epsilon)
+    delta = torch.clamp(args.alpha * pseudo_gradient.sign(), -args.epsilon, args.epsilon)
     print("Delta mean:", delta.mean().item(), "std:", delta.std().item())
 
     # x + delta
