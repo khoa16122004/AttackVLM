@@ -82,8 +82,9 @@ normalize = torchvision.transforms.Compose(
 )
 @torch.no_grad
 def p(model, image):
-    image = normalize(image / 255.0)
-    samples  = {"image": image}
+    image_ = image.clone()
+    image_ = normalize(image_ / 255.0)
+    samples  = {"image": image_}
     caption  = model.generate(samples, use_nucleus_sampling=True, num_captions=1)
     return caption
 
