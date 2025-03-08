@@ -141,6 +141,7 @@ def main():
     data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, vis_processors)
     
     image, gt_txt, image_path, target_image, tar_txt, target_path = data[args.img_index]
+    image.require_grad = True
     basename = os.path.basename(image_path)
     
     image = image.to(device).unsqueeze(0)
