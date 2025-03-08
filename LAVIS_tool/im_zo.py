@@ -122,9 +122,8 @@ def ZO_Attack(args, image, image_tar, model):
         image_pertubed = torch.clamp(image_repeat + noise, 0, 1)
         image_pertubed_feature = blip_image_encoder(image_pertubed, model)
         
-        coeficient = image_pertubed_feature - image_feature  
-        coeficient = torch.sum(coeficient * image_tar_feature, dim=0)
-        print(coeficient.shape)
+        coeficient = image_pertubed_feature - image_feature # num_query * 768
+        coeficient = torch.sum(coeficient * image_tar_feature, dim=1)
         gradient = (coeficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0)  
         delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
         image_adv = torch.clamp(image_adv + args.alpha * delta, 0, 1) 
