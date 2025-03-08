@@ -161,9 +161,9 @@ def main():
     print("Pertubed_txt embedding: ", pertubed_txt_embedding.shape)
     
     # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
-    coefficient = pertubed_txt_embedding - clean_txt_embedding
+    coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
     print("coefficient: ", coefficient.shape)
-    coefficient = pertubed_txt_embedding * target_feature
+    coefficient = (coefficient @ target_feature.T)    # num_query
     print("coefficient 1: ", coefficient.shape)
 
     pseudo_gradient = coefficient * noise
