@@ -140,7 +140,7 @@ def main():
     
     # Grouth Truth Gradient
     target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
-    image_feature = clip_encode_text(p(model, image))
+    image_feature = clip_encode_text(p(model, image), clip_img_model_vitb32)
     loss = image_feature @ target_feature.T
     
     print("Loss: ", loss)
