@@ -127,7 +127,7 @@ def main():
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
 
     # ---------------------- Data ---------------------    
-    data = CustomDataset(args.annotation_file, args.image_dir, args.target_dir,
+    data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
                          torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
                                                          torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
                                                          torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
@@ -142,6 +142,9 @@ def main():
     target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
     image_feature = clip_encode_text(p(model, image))
     loss = image_feature @ target_feature.T
+    
+    print("Loss: ", loss)
+    
     loss.backward()
     grad = image.grad.detach()
     print("gt gradient shape:", grad.shape)
