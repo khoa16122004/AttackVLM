@@ -135,7 +135,7 @@ def main():
     
     image, gt_txt, image_path, target_image, tar_txt, target_path = data[args.img_index]
     
-    image = image.to(device)
+    image = image.to(device).unsqueeze(0)
     image.require_grad = True
     
     # Grouth Truth Gradient
