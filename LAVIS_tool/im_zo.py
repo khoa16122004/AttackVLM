@@ -96,7 +96,7 @@ def FO_Attack(args, image, image_tar, model):
     image_tar_feauture = blip_image_encoder(image_tar_, model)
     loss = image_feauture @ image_tar_feauture.T
     loss.backward()
-    gradient = image.grad.data.sign()
+    gradient = image_.grad.data.sign()
     pertubtation = torch.clamp(args.alpha * gradient, -args.epsilon, args.epsilon)
     image_adv = torch.clamp(image_ + pertubtation, 0, 1)
     
@@ -141,7 +141,6 @@ def main():
     data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, vis_processors)
     
     image, gt_txt, image_path, target_image, tar_txt, target_path = data[args.img_index]
-    image.require_grad = True
     basename = os.path.basename(image_path)
     
     image = image.to(device).unsqueeze(0)
