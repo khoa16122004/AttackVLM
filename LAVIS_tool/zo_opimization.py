@@ -173,7 +173,7 @@ def main():
     
     # save_image
     basename = os.path.basename(image_path)
-    torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output, basename))
+    torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output_dir, basename))
 
     image_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
     loss = image_feature @ target_feature.T
