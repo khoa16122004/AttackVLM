@@ -123,7 +123,7 @@ def main():
         estimate gradient of L_x
     """
     
-    
+    os.makedirs(args.output_dir, exist_ok=True)
     # ---------------------- Model --------------------
     clip_img_model_vitb32, _ = clip.load("ViT-B/32", device=device, jit=False)
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
@@ -166,16 +166,20 @@ def main():
     pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
     pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
     delta = torch.clamp(args.alpha * pseudo_gradient, -args.epsilon, args.epsilon)
-    # 
     
-    img_adv = image + (args.alpha * pseudo_gradient)
+    # x + delta
+    img_adv = image + delta
     img_adv = torch.clamp(img_adv, 0.0, 255.0)
     
+    # save_image
+    basename = os.path.basename(image_path)
+    torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output, basename))
+
     image_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
     loss = image_feature @ target_feature.T
     
     print("adv Loss: ", loss)
-
+    print("adv txt: ", p(model, img_adv))
     
 if __name__ == "__main__":
     main()
