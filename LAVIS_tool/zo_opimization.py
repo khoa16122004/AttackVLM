@@ -146,13 +146,13 @@ def main():
     print("Clean txt: ", clean_txt)
     print("target txt: ", tar_txt)
     # g(c_tar)
-    target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
+    target_feature = clip_encode_text("two dogs and a tanks", 
+                                      clip_img_model_vitb32)
     
     # original loss
     loss = clean_txt_embedding @ target_feature.T
     print("original loss: ", loss)
     
-    print(clip_encode_text("a golden retriever playing in the park", clip_img_model_vitb32) @ clip_encode_text("a businessman giving a presentation", clip_img_model_vitb32).T)
     
     # x + sigma * noise 
     image_repeat = image.repeat(args.num_query, 1, 1, 1)
@@ -169,7 +169,7 @@ def main():
 
     pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
     pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
-    delta = torch.clamp(args.alpha * pseudo_gradient, -args.epsilon, args.epsilon)
+    delta = torch.clamp(args.alpha * - pseudo_gradient, -args.epsilon, args.epsilon)
     
     # x + delta
     img_adv = image + delta
