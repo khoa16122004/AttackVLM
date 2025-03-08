@@ -89,7 +89,7 @@ def clip_encode_text(txt, clip_model, detach=True):
     return target_text_features
 
 def FO_Attack(args, image, image_tar, model):
-    image_adv = image.clone().detach()
+    image_ = image.clone().detach()
     image_tar_ = image_tar.clone().detach()
     image_adv.requires_grad = True
 
@@ -98,8 +98,8 @@ def FO_Attack(args, image, image_tar, model):
         image_tar_feauture = blip_image_encoder(image_tar_, model)
         loss = torch.sum(image_feauture * image_tar_feauture)
         loss.backward()
-        gradient = image_adv.grad.data.detach().sign()
-        pertubtation = torch.clamp(args.alpha * gradient, -args.epsilon, args.epsilon)
+        gradient = image_adv.grad.data.detach()
+        pertubtation = torch.clamp(args.alpha * gradient.sign(), -args.epsilon, args.epsilon)
         image_adv = torch.clamp(image_adv + pertubtation, 0, 1)
         image_adv.grad.zero_()
     return image_adv, gradient
