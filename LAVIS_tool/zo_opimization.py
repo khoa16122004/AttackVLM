@@ -156,8 +156,11 @@ def main():
     print("original loss: ", loss)
     img_adv = image.clone()
     best_loss = 0
+    adv_cap = clean_txt
     for step in tqdm(range(args.steps)):
-    # x + sigma * noise 
+        clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
+
+        # x + sigma * noise 
         image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
 
         noise = torch.randn_like(image_repeat).sign()
@@ -165,15 +168,18 @@ def main():
         
         # c = p(x + sigma * noise)
         pertubed_txt = p(model, perturbed_image_repeat)
+        
+        # g(p(x + sigma * noise))
         pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
         
         # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
         coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
         coefficient = (coefficient @ target_feature.T)    # num_query x 1
 
-        pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise    
+        pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise # num_query x 3 x 384 x 384 
         pseudo_gradient = torch.sum(pseudo_gradient, dim=0) / (args.num_query * args.sigma)
-        delta = torch.clamp(args.alpha * - pseudo_gradient.sign(), -args.epsilon, args.epsilon)
+        print(sum(pseudo_gradient))
+        delta = torch.clamp(args.alpha * pseudo_gradient.sign(), -args.epsilon, args.epsilon)
 
         # x + delta
         img_adv = img_adv + delta
