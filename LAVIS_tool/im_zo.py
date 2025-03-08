@@ -110,10 +110,12 @@ def FO_Attack(args, image, image_tar, model):
 
 @torch.no_grad()
 def ZO_Attack(args, image, image_tar, model):
+    # Ensure inputs are treated as batches
+    batch_size = image.shape[0]
     image_adv = image.clone().detach()
     image_tar_ = image_tar.clone().detach()
     
-    # Get the initial feature representation
+    # Get the initial feature representation of target images
     image_tar_feature = blip_image_encoder(image_tar_, model, gradient=False)
     
     # Create a tensor to keep track of the best gradient estimate
@@ -123,21 +125,36 @@ def ZO_Attack(args, image, image_tar, model):
         # Reset the gradient estimate for this step
         step_gradient = torch.zeros_like(image_adv)
         
-        # Perform queries to estimate gradient
-        for q in range(args.num_query):
-            # Generate random perturbation
-            u = torch.randn_like(image_adv) * args.sigma
+        # Process queries in sub-batches to avoid memory issues
+        query_batch_size = min(args.num_query, 10)  # Adjust this based on your GPU memory
+        num_sub_batches = args.num_query // query_batch_size
+        
+        for sb in range(num_sub_batches):
+            # Generate random perturbations for the entire batch at once
+            u_batch = torch.randn(query_batch_size, *image_adv.shape[1:], device=image_adv.device) * args.sigma
             
-            # Evaluate function at x + u and x - u
-            f_plus = blip_image_encoder(torch.clamp(image_adv + u, 0, 1), model, gradient=False)
-            f_minus = blip_image_encoder(torch.clamp(image_adv - u, 0, 1), model, gradient=False)
+            losses_plus = []
+            losses_minus = []
             
-            # Compute loss values (similarity with target image features)
-            loss_plus = torch.sum(f_plus * image_tar_feature)
-            loss_minus = torch.sum(f_minus * image_tar_feature)
-            
-            # Estimate gradient using finite differences
-            step_gradient += (loss_plus - loss_minus) * u / (2 * args.sigma * args.num_query)
+            # Evaluate each perturbation
+            for q in range(query_batch_size):
+                u = u_batch[q].unsqueeze(0).expand_as(image_adv)
+                
+                # Evaluate function at x + u and x - u
+                f_plus = blip_image_encoder(torch.clamp(image_adv + u, 0, 1), model, gradient=False)
+                f_minus = blip_image_encoder(torch.clamp(image_adv - u, 0, 1), model, gradient=False)
+                
+                # Compute loss values (similarity with target image features)
+                loss_plus = torch.sum(f_plus * image_tar_feature, dim=1)
+                loss_minus = torch.sum(f_minus * image_tar_feature, dim=1)
+                
+                # Store the results
+                losses_plus.append(loss_plus)
+                losses_minus.append(loss_minus)
+                
+                # Update the gradient estimate for this sub-batch
+                for b in range(batch_size):
+                    step_gradient[b] += (loss_plus[b] - loss_minus[b]) * u[b] / (2 * args.sigma * args.num_query)
         
         # Update the cumulative gradient
         gradient = step_gradient
