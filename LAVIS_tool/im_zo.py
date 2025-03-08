@@ -89,8 +89,8 @@ def clip_encode_text(txt, clip_model, detach=True):
     return target_text_features
 
 def FO_Attack(args, image, image_tar, model):
-    image_ = image.clone().detach()
-    image_tar_ = image_tar.clone().detach()
+    image_ = image.clone()
+    image_tar_ = image_tar.clone()
     image_.requires_grad = True
     image_feauture = blip_image_encoder(image_, model)
     image_tar_feauture = blip_image_encoder(image_tar_, model)
