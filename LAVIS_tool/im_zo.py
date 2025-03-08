@@ -91,9 +91,9 @@ def clip_encode_text(txt, clip_model, detach=True):
 def FO_Attack(args, image, image_tar, model):
     image_adv = image.clone().detach()
     image_tar_ = image_tar.clone().detach()
-    
+    image_adv.requires_grad = True
+
     for i in tqdm(range(args.steps)):
-        image_adv.requires_grad = True
         image_feauture = blip_image_encoder(image_adv, model)
         image_tar_feauture = blip_image_encoder(image_tar_, model)
         loss = torch.sum(image_feauture * image_tar_feauture)
