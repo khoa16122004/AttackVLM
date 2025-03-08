@@ -8,6 +8,7 @@ import torchvision
 from PIL import Image
 from lavis.models import load_model_and_preprocess
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 DEFAULT_RANDOM_SEED = 22520691
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -154,7 +155,7 @@ def main():
     loss = clean_txt_embedding @ target_feature.T
     print("original loss: ", loss)
     img_adv = image.clone()
-    for step in range(args.steps):
+    for step in tqdm(range(args.steps)):
     # x + sigma * noise 
         image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
 
