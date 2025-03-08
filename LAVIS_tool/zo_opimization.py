@@ -152,6 +152,8 @@ def main():
     loss = clean_txt_embedding @ target_feature.T
     print("original loss: ", loss)
     
+    print(clip_encode_text("a dog", clip_img_model_vitb32), clip_encode_text("human", clip_img_model_vitb32))
+    
     # x + sigma * noise 
     image_repeat = image.repeat(args.num_query, 1, 1, 1)
     noise = torch.randn_like(image_repeat).sign()
