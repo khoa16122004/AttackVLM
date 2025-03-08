@@ -136,18 +136,41 @@ def main():
     image, gt_txt, image_path, target_image, tar_txt, target_path = data[args.img_index]
     
     image = image.to(device).unsqueeze(0)
-    image.require_grad = True
+    clean_txt = p(model, image)
+    clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
+    print("Clean txt: ", clean_txt)
     
-    # Grouth Truth Gradient
+    # g(c_tar)
     target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
-    image_feature = clip_encode_text(p(model, image), clip_img_model_vitb32)
+    
+    # x + sigma * noise 
+    image_repeat = image.repeat(args.num_query, 1, 1, 1)
+    noise = torch.randn_like(image_repeat).sign()
+    perturbed_image_repeat = torch.clamp(image_repeat + (args.sigma * noise), 0.0, 255.0)    
+    
+    # c = p(x + sigma * noise)
+    pertubed_txt = p(model, perturbed_image_repeat)
+    pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
+    print("Pertubed_txt: ", pertubed_txt)
+    
+    # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
+    coefficient = pertubed_txt_embedding - clean_txt_embedding
+    coefficient = pertubed_txt_embedding * target_feature
+    coefficient = torch.sum(coefficient, dim=1)
+    coefficient = coefficient.reshape(args.num_query, 1, 1, 1)
+    pseudo_gradient = coefficient * noise / args.sigma
+    print("pseudo_gradient shape:", pseudo_gradient.shape)
+    # 
+    
+    img_adv = image + (args.alpha * pseudo_gradient)
+    img_adv = torch.clamp(img_adv, 0.0, 255.0)
+    print("img_adv shape:", img_adv.shape)
+    
+    image_feature = clip_encode_text(p(model, img_adv), clip_img_model_vitb32)
     loss = image_feature @ target_feature.T
     
     print("Loss: ", loss)
-    
-    loss.backward()
-    grad = image.grad.detach()
-    print("gt gradient shape:", grad.shape)
+
     
 if __name__ == "__main__":
     main()
