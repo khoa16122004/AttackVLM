@@ -142,6 +142,10 @@ def main():
     clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
     print("Clean txt: ", clean_txt)
     
+    image_feature = clip_encode_text(p(model, image.clone().detach()), clip_img_model_vitb32)
+    loss = image_feature @ target_feature.T
+    print("original loss: ", loss)
+    
     # g(c_tar)
     target_feature = clip_encode_text(tar_txt, clip_img_model_vitb32)
     
@@ -153,7 +157,7 @@ def main():
     # c = p(x + sigma * noise)
     pertubed_txt = p(model, perturbed_image_repeat)
     pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
-    print("Pertubed_txt embedding: ", pertubed_txt.shape)
+    print("Pertubed_txt embedding: ", pertubed_txt_embedding.shape)
     
     # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
     coefficient = pertubed_txt_embedding - clean_txt_embedding
