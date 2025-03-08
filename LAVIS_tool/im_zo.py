@@ -135,6 +135,8 @@ def main():
     
     image = image.to(device).unsqueeze(0)
     target_image = target_image.to(device).unsqueeze(0)
+    print(image.shape, target_image.shape)
+    
     print("oriignal loss: ", model.forward_encoder({"image": image}) @ model.forward_encoder({"image": target_image}))
 
     # ----------------- FO attack -------------------
