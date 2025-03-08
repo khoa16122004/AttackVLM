@@ -168,7 +168,7 @@ def main():
         
         # c = p(x + sigma * noise)
         pertubed_txt = p(model, perturbed_image_repeat)
-        
+        print("pertubed_txt: ", pertubed_txt)
         # g(p(x + sigma * noise))
         pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
         
