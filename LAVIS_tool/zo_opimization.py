@@ -153,13 +153,12 @@ def main():
     # c = p(x + sigma * noise)
     pertubed_txt = p(model, perturbed_image_repeat)
     pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
-    print("Pertubed_txt: ", pertubed_txt)
+    print("Pertubed_txt embedding: ", pertubed_txt.shape)
     
     # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
     coefficient = pertubed_txt_embedding - clean_txt_embedding
     coefficient = pertubed_txt_embedding * target_feature
-    coefficient = torch.sum(coefficient, dim=1)
-    coefficient = coefficient.reshape(args.num_query, 1, 1, 1)
+    coefficient = torch.mean(coefficient, dim=0)
     pseudo_gradient = coefficient * noise / args.sigma
     print("pseudo_gradient shape:", pseudo_gradient.shape)
     # 
