@@ -145,8 +145,8 @@ def main():
     image = image.to(device).unsqueeze(0)
     clean_txt = p(model, image)[0]
     clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
-    print("Clean txt: ", clean_txt)
-    print("target txt: ", tar_txt)
+    # print("Clean txt: ", clean_txt)
+    # print("target txt: ", tar_txt)
     # g(c_tar)
     target_feature = clip_encode_text(tar_txt, 
                                       clip_img_model_vitb32)
