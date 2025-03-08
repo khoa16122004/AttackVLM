@@ -112,57 +112,22 @@ def FO_Attack(args, image, image_tar, model):
 def ZO_Attack(args, image, image_tar, model):
     image_adv = image.clone().detach()
     image_tar_ = image_tar.clone().detach()
-    
-    # Get the initial feature representation of target image
-    image_tar_feature = blip_image_encoder(image_tar_, model, gradient=False)
-    
-    # Create a tensor to keep track of the best gradient estimate
-    gradient = torch.zeros_like(image_adv)
-    
+
     for i in tqdm(range(args.steps)):
-        u = torch.randn(args.num_query, *image_adv.shape, device=image_adv.device) * args.sigma
+        image_feature = blip_image_encoder(image_adv, model)
+        image_tar_feature = blip_image_encoder(image_tar_, model)
         
-        # Create positive and negative perturbations
-        # Expand image_adv to match shape of u
-        expanded_img = image_adv.expand(args.num_query, *image_adv.shape)
+        image_repeat = image_adv.repeat(args.num_query, 1, 1, 1)
+        noise = torch.randn_like(image_repeat) * args.sigma
+        image_pertubed = torch.clamp(image_repeat + noise, 0, 1)
+        image_pertubed_feature = blip_image_encoder(image_pertubed, model)
         
-        # Apply perturbations
-        perturbed_plus = torch.clamp(expanded_img + u, 0, 1)
-        perturbed_minus = torch.clamp(expanded_img - u, 0, 1)
-        
-        # Reshape for batch processing
-        # From [num_query, batch_size, C, H, W] to [num_query * batch_size, C, H, W]
-        perturbed_plus_flat = perturbed_plus.reshape(-1, *image_adv.shape[1:])
-        perturbed_minus_flat = perturbed_minus.reshape(-1, *image_adv.shape[1:])
-        
-        # Process all perturbations in one go
-        f_plus_flat = blip_image_encoder(perturbed_plus_flat, model, gradient=False)
-        f_minus_flat = blip_image_encoder(perturbed_minus_flat, model, gradient=False)
-        
-        # Reshape back to [num_query, batch_size, feature_dim]
-        f_plus = f_plus_flat.reshape(args.num_query, *image_adv.shape[:1], -1)
-        f_minus = f_minus_flat.reshape(args.num_query, *image_adv.shape[:1], -1)
-        
-        # Expand target feature to match shape of f_plus and f_minus
-        expanded_target = image_tar_feature.expand(args.num_query, *image_tar_feature.shape)
-        
-        # Compute loss values (similarity with target image features)
-        # Result shape: [num_query, batch_size]
-        loss_plus = torch.sum(f_plus * expanded_target, dim=2)
-        loss_minus = torch.sum(f_minus * expanded_target, dim=2)
-        
-        # Compute gradient estimate
-        # For each query and each image in batch
-        loss_diff = (loss_plus - loss_minus).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-        gradient_estimates = loss_diff * u / (2 * args.sigma)
-        
-        # Average over all queries
-        gradient = torch.mean(gradient_estimates, dim=0)
-        
-        # Apply the estimated gradient to update the image
-        perturbation = torch.clamp(args.alpha * torch.sign(gradient), -args.epsilon, args.epsilon)
-        image_adv = torch.clamp(image_adv + perturbation, 0, 1)
-    
+        coeficient = image_pertubed_feature - image_feature # num_query * 768
+        coeficient = torch.sum(coeficient * image_tar_feature, dim=1)
+        gradient = (coeficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0)  
+        delta = torch.clamp(gradient, -args.epsilon, args.epsilon)
+        image_adv = torch.clamp(image_adv + args.alpha * torch.sign(delta), 0, 1) 
+
     return image_adv, gradient
 
 def check(fo_v, zo_v):
@@ -241,8 +206,8 @@ def main():
     torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, "zo_" + basename))
 
     print("Differecen perutbation: ", (fo_gradient - zo_gradient).mean())
+    print("FO gradient mean: ", fo_gradient.abs().mean().item())
+    print("ZO gradient mean: ", zo_gradient.abs().mean().item())
 
-
-    check(fo_gradient.sign(), zo_gradient.sign())
 if __name__ == "__main__":
     main()
