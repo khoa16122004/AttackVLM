@@ -86,7 +86,6 @@ def p(model, image):
     return caption
 
 def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps, alpha, epsilon, sigma):
-    image = image.unsqueeze(0)
     c_tar_embedding = clip_encode_text(c_tar, clip_img_model_vitb32)
 
     img_adv = image.clone()
@@ -94,7 +93,6 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
     
     for step in range(steps):
         clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
-        print(num_query)
         image_repeat = img_adv.repeat(num_query, 1, 1, 1)
         noise = torch.randn_like(image_repeat) * sigma
         perturbed_image_repeat = torch.clamp(image_repeat + noise, 0.0, 255.0)    
