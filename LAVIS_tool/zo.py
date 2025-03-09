@@ -128,7 +128,7 @@ def main(args):
                                                          torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
                                                          torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
                         )
-    
+    clip_scores = 0
     alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
     with open(f"{output_dir}.txt", "w") as f:
         for i in tqdm(range(args.num_samples)):
@@ -144,11 +144,12 @@ def main(args):
             
             clip_score = torch.sum(c_tar_embedding * img_adv_embedding, dim=1)
             clip_scores += clip_score
-            print(clip_score)
             torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
             f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
             
-
+    clip_scores = clip_scores / args.num_samples
+    print(f"Average clip score: {clip_scores}")
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--steps", default=8, type=int)
