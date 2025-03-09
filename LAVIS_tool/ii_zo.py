@@ -180,7 +180,7 @@ def main():
         img_adv = torch.clamp(img_adv, 0.0, 255.0)
         adv_cap = p(model, img_adv)        
             
-        print(f"[Step {step}] adv Loss: {loss}, loss adv txt: {adv_cap}")
+        # print(f"[Step {step}] adv Loss: {loss}, loss adv txt: {adv_cap}")
         
     # save_image
     clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
