@@ -10,7 +10,12 @@ from lavis.models import load_model_and_preprocess
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-
+def to_tensor(pic):
+    mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
+    img = torch.from_numpy(np.array(pic, mode_to_nptype.get(pic.mode, np.uint8), copy=True))
+    img = img.view(pic.size[1], pic.size[0], len(pic.getbands()))
+    img = img.permute((2, 0, 1)).contiguous()
+    return img.to(dtype=torch.get_default_dtype())
 
 class CustomDataset(Dataset):
     def __init__(self, annotations_file, image_dir, target_dir, transform=None):
@@ -117,7 +122,7 @@ def main(args):
     clip_img_model_vitb32, vis_processors = clip.load("ViT-L/14", device="cuda")
     clip_img_model_vitb32.eval()
     
-    model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
+    model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device="cuda")
     model.eval()
     
     data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
