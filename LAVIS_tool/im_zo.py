@@ -156,7 +156,7 @@ def main():
     parser.add_argument("--steps", default=8, type=int)
     parser.add_argument("--alpha", default=0.2, type=float)
     parser.add_argument("--epsilon", default=0.5, type=float)
-    parser.add_argument("--sigma", default=16, type=float)
+    parser.add_argument("--sigma", default=0.01, type=float)
     parser.add_argument("--num_query", default=100, type=int)
     parser.add_argument("--output_dir", default="zo", type=str)
     parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')

@@ -102,10 +102,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--img_index", type=int)
     parser.add_argument("--steps", default=8, type=int)
-    parser.add_argument("--alpha", default=8, type=float)
-    parser.add_argument("--epsilon", default=8, type=float)
-    parser.add_argument("--sigma", default=16, type=float)
-    parser.add_argument("--num_query", default=100, type=int)
+    parser.add_argument("--alpha", default=0.2, type=float)
+    parser.add_argument("--epsilon", default=0.001, type=float)
+    parser.add_argument("--sigma", default=0.01, type=float)
+    parser.add_argument("--num_query", default=1000, type=int)
     parser.add_argument("--output_dir", default="zo", type=str)
     parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
     parser.add_argument("--target_dir", type=str, help="The folder name contains the target image")    
@@ -139,7 +139,7 @@ def main():
                                                          torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
                                                          torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
                         )
-    
+    alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
     image, gt_txt, image_path, target_image, tar_txt, target_path = data[args.img_index]
     
     image = image.to(device).unsqueeze(0)
@@ -162,7 +162,7 @@ def main():
         image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
 
         noise = torch.randn_like(image_repeat)
-        perturbed_image_repeat = torch.clamp(image_repeat + (args.sigma * noise), 0.0, 255.0)    
+        perturbed_image_repeat = torch.clamp(image_repeat + (sigma * noise), 0.0, 255.0)    
         
         # c = p(x + sigma * noise)
         pertubed_txt = p(model, perturbed_image_repeat)
@@ -173,7 +173,7 @@ def main():
         # coefficient = (coefficient @ target_feature.T)    # num_query x 1
         coefficient = torch.sum(coefficient * target_feature, dim=1)
         pseudo_gradient = (coefficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0) # num_query x 3 x 384 x 384 
-        delta = torch.clamp(args.alpha * pseudo_gradient.sign(), -args.epsilon, args.epsilon)
+        delta = torch.clamp(alpha * pseudo_gradient.sign(), -epsilon, epsilon)
 
         # x + delta
         img_adv = img_adv + delta
