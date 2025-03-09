@@ -116,7 +116,7 @@ def main(args):
     output_dir = f"{args.output_dir}_{args.num_query}_{args.steps}_{args.alpha}_{args.epsilon}_{args.sigma}"
     os.makedirs(output_dir, exist_ok=True)
     
-    clip_img_model_vitb32, vis_processors = clip.load("ViT-L/14", device="cuda")
+    clip_img_model_vitb32, preprocess = clip.load("ViT-L/14", device="cuda")
     clip_img_model_vitb32.eval()
     
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device="cuda")
@@ -139,7 +139,7 @@ def main(args):
             c_clean = p(model, image)[0]
 
             image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
-            img_adv_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, vis_processors)
+            img_adv_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, preprocess)
             
             clip_score = torch.sum(c_tar_embedding * img_adv_embedding, dim=1)
             clip_scores += clip_score
