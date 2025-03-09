@@ -140,7 +140,6 @@ def main(args):
             image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
             
             pil_image_adv = torchvision.transforms.ToPILImage()(image_adv.squeeze(0).cpu())
-            print(pil_image_adv)
             img_adv_embedding = clip_encode_image(pil_image_adv, clip_img_model_vitb32, preprocess)
             clip_score = torch.sum(c_tar_embedding * img_adv_embedding, dim=1)
             clip_scores += clip_score
