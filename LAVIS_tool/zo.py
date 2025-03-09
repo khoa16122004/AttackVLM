@@ -87,7 +87,7 @@ def p(model, image):
 
 def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps, alpha, epsilon, sigma):
     image = image.unsqueeze(0)
-    c_tar_embedding = clip_img_model_vitb32.encode_text(c_tar)
+    c_tar_embedding = clip_encode_text(c_tar, clip_img_model_vitb32)
 
     img_adv = image.clone()
     adv_cap = c_clean
