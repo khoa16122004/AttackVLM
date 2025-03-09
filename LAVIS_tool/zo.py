@@ -94,7 +94,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
     
     for step in range(steps):
         clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
-        
+        print(num_query)
         image_repeat = img_adv.repeat(num_query, 1, 1, 1)
         noise = torch.randn_like(image_repeat) * sigma
         perturbed_image_repeat = torch.clamp(image_repeat + noise, 0.0, 255.0)    
