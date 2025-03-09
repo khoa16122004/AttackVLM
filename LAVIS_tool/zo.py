@@ -133,7 +133,7 @@ def main(args):
     
     alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
     with open(f"{output_dir}.txt", "w") as f:
-        for i in tqdm(args.num_samples):
+        for i in tqdm(range(args.num_samples)):
             image, gt_txt, image_path, target_image, tar_txt, target_path = data[i]
             basename = os.path.basename(image_path)
             
