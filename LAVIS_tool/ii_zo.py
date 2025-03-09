@@ -31,9 +31,6 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
     seedTorch(seed)
 
 
-
-
-
 def to_tensor(pic):
     mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
     img = torch.from_numpy(np.array(pic, mode_to_nptype.get(pic.mode, np.uint8), copy=True))
@@ -42,7 +39,7 @@ def to_tensor(pic):
     return img.to(dtype=torch.get_default_dtype())
 
 class CustomDataset(Dataset):
-    def __init__(self, annotations_file, image_dir, target_dir, transform=None):
+    def __init__(self, annotations_file, image_dir, target_dir, vis_processors):
         with open(annotations_file, "r") as f:
             lines = [line.strip().split("\t") for line in f.readlines()]
             self.file_names = [line[0] for line in lines]
@@ -51,7 +48,7 @@ class CustomDataset(Dataset):
             
         self.image_dir = image_dir
         self.target_dir = target_dir
-        self.transform = transform
+        self.vis_processors = vis_processors
 
         
     def __len__(self):
@@ -65,29 +62,22 @@ class CustomDataset(Dataset):
 
         image = Image.open(image_path).convert("RGB")
         target_image = Image.open(target_path).convert("RGB")
-
-        # image_processed = vis_processors["eval"](image)
-        # target_image_processed = vis_processors["eval"](target_image)
-        # text_processed  = txt_processors["eval"](class_text_all[original_tuple[1]])
-        if self.transform:
-            image = self.transform(image)
-            target_image = self.transform(target_image)
+        image = self.vis_processors["eval"](image)
+        target_image = self.vis_processors["eval"](target_image)
+       
         
         return image, gt_txt, image_path, target_image, tar_txt, target_path
 
 
-normalize = torchvision.transforms.Compose(
-    [   
-        torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-    ]
-)
+
 @torch.no_grad()
 def p(model, image):
     image_ = image.clone()
-    image_ = normalize(image_ / 255.0)
+    # image_ = normalize(image_ / 255.0)
     samples  = {"image": image_}
     caption  = model.generate(samples, use_nucleus_sampling=True, num_captions=1)
     return caption
+
 
 @torch.no_grad()
 def clip_encode_text(txt, clip_model, detach=True):
@@ -98,14 +88,76 @@ def clip_encode_text(txt, clip_model, detach=True):
         target_text_features = target_text_features.detach()
     return target_text_features
 
+def FO_Attack(args, image, image_tar, model):
+    image_adv = image.clone().detach()
+    image_tar_ = image_tar.clone().detach()
+    image_adv.requires_grad = True
+
+    for i in tqdm(range(args.steps)):
+        image_feauture = blip_image_encoder(image_adv, model)
+        image_tar_feauture = blip_image_encoder(image_tar_, model)
+        loss = torch.sum(image_feauture * image_tar_feauture)
+        loss.backward()
+
+        gradient = image_adv.grad.detach()
+        pertubtation = torch.clamp(args.alpha * torch.sign(gradient), -args.epsilon, args.epsilon)
+
+        image_adv.data = torch.clamp(image_adv + pertubtation, 0, 1)
+
+        image_adv.grad.zero_()
+
+    return image_adv, gradient
+
+@torch.no_grad()
+def ZO_Attack(args, image, image_tar, model):
+    image_adv = image.clone().detach()
+    image_tar_ = image_tar.clone().detach()
+
+    for i in tqdm(range(args.steps)):
+        image_feature = blip_image_encoder(image_adv, model)
+        image_tar_feature = blip_image_encoder(image_tar_, model)
+        
+        image_repeat = image_adv.repeat(args.num_query, 1, 1, 1)
+        noise = torch.randn_like(image_repeat) * args.sigma
+        image_pertubed = torch.clamp(image_repeat + noise, 0, 1)
+        image_pertubed_feature = blip_image_encoder(image_pertubed, model)
+        
+        coeficient = image_pertubed_feature - image_feature # num_query * 768
+        coeficient = torch.sum(coeficient * image_tar_feature, dim=1)
+        gradient = (coeficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0)  
+        delta = torch.clamp(args.alpha * torch.sign(gradient), -args.epsilon, args.epsilon)
+        image_adv = torch.clamp(image_adv + delta, 0, 1) 
+
+    return image_adv, gradient
+
+def check(fo_v, zo_v):
+    check = 0
+    for i in range(fo_v.shape[0]):
+        if fo_v[i] == zo_v[i]:
+            check += 1
+    
+    print(check)
+        
+
+def blip_image_encoder(image, model, gradient=True):
+    if gradient == True:
+        image_feauture = model.forward_encoder({"image": image})[:,0,:]
+        image_feauture = image_feauture / image_feauture.norm(dim=1, keepdim=True)
+    else:
+        with torch.no_grad():
+            image_ = image.clone().detach()
+            image_feauture = model.forward_encoder({"image": image_})[:,0,:]
+            image_feauture = image_feauture / image_feauture.norm(dim=1, keepdim=True)
+    return image_feauture
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--img_index", type=int)
     parser.add_argument("--steps", default=8, type=int)
     parser.add_argument("--alpha", default=0.2, type=float)
-    parser.add_argument("--epsilon", default=0.001, type=float)
+    parser.add_argument("--epsilon", default=0.5, type=float)
     parser.add_argument("--sigma", default=0.01, type=float)
-    parser.add_argument("--num_query", default=1000, type=int)
+    parser.add_argument("--num_query", default=100, type=int)
     parser.add_argument("--output_dir", default="zo", type=str)
     parser.add_argument("--image_dir", type=str, help='The folder name contains the original image')
     parser.add_argument("--target_dir", type=str, help="The folder name contains the target image")    
@@ -115,82 +167,48 @@ def main():
     args = parser.parse_args()
     
     seedEverything()
-    # ----------------------- Our problem ----------------------
-    """
-        c_tar: the target_text
-        x: a image
-        c = p(x): is the predicted caption of x
-        g(c): is the txtembedding of c     
-        L_x = g(c_tar) * g(p(x)) 
-        
-        estimate gradient of L_x
-    """
+
     
     os.makedirs(args.output_dir, exist_ok=True)
     # ---------------------- Model --------------------
-    clip_img_model_vitb32, _ = clip.load("ViT-L/14", device=device)
-    clip_img_model_vitb32.eval()
 
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device=device)
     model.eval()
     # ---------------------- Data ---------------------    
-    data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
-                         torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
-                                                         torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
-                                                         torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
-                        )
-    alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
+    data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, vis_processors)
+    
     image, gt_txt, image_path, target_image, tar_txt, target_path = data[args.img_index]
+    basename = os.path.basename(image_path)
     
     image = image.to(device).unsqueeze(0)
-    clean_txt = p(model, image)[0]
-    clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
+    target_image = target_image.to(device).unsqueeze(0)
 
-    target_feature = clip_encode_text(tar_txt, 
-                                      clip_img_model_vitb32)
-    
-    # original loss
-    loss = clean_txt_embedding @ target_feature.T
-    print("oriignal cap: ", clean_txt)   
-    print("target cap: ", tar_txt) 
-    print("original loss: ", loss)
-    
-    img_adv = image.clone()
-    adv_cap = clean_txt
-    for step in tqdm(range(args.steps)):
-        clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
+    print("oriignal cap: ", p(model, image))   
+    print("tar cap: ", tar_txt) 
+    print("oriignal loss: ", blip_image_encoder(image, model) @ blip_image_encoder(target_image, model).T)
 
-        # x + sigma * noise 
-        image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
+    # ----------------- FO attack -------------------
+    image_adv, fo_gradient = FO_Attack(args, image, target_image, model)
+    fo_adv_cap = p(model, image_adv)
+    print("Fo adv cap: ", fo_adv_cap)
+    print("FO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model).T)
+    print("FO difference: ", (image_adv - image).mean())
+    torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, "fo_" + basename))
+    torchvision.utils.save_image(image, os.path.join(args.output_dir, "ori_" + basename))
+    torchvision.utils.save_image(target_image, os.path.join(args.output_dir, "tar_" + basename))
 
-        noise = torch.randn_like(image_repeat) * sigma
-        perturbed_image_repeat = torch.clamp(image_repeat + noise, 0.0, 255.0)    
-        
-        # c = p(x + sigma * noise)
-        pertubed_txt = p(model, perturbed_image_repeat)
-        pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
-        
-        # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
-        coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
-        # coefficient = (coefficient @ target_feature.T)    # num_query x 1
-        coefficient = torch.sum(coefficient * target_feature, dim=1)
-        pseudo_gradient = (coefficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0) # num_query x 3 x 384 x 384 
-        delta = torch.clamp(alpha * pseudo_gradient.sign(), -epsilon, epsilon)
 
-        # x + delta
-        img_adv = img_adv + delta
-        img_adv = torch.clamp(img_adv, 0.0, 255.0)
-        adv_cap = p(model, img_adv)        
-            
-        # print(f"[Step {step}] adv Loss: {loss}, loss adv txt: {adv_cap}")
-        
-    # save_image
-    clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
-    final_loss = torch.sum(clean_txt_embedding * target_feature, dim=1)
-    print("loss: ", final_loss)
-    print("adv txt: ", adv_cap)
-    basename = os.path.basename(image_path)
-    torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output_dir, basename))
-    
+    # ------------------- ZO attack -------------------
+    image_adv, zo_gradient = ZO_Attack(args, image, target_image, model)
+    zo_adv_cap = p(model, image_adv)
+    print("Zo adv cap: ", zo_adv_cap)
+    print("ZO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model).T)
+    print("ZO difference: ", (image_adv - image).mean())
+    torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, "zo_" + basename))
+
+    print("Differecen perutbation: ", (fo_gradient - zo_gradient).mean())
+    print("FO gradient mean: ", fo_gradient.abs().mean().item())
+    print("ZO gradient mean: ", zo_gradient.abs().mean().item())
+ 
 if __name__ == "__main__":
     main()
