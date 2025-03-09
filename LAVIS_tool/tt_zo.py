@@ -30,10 +30,6 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
     seedBasic(seed)
     seedTorch(seed)
 
-
-
-
-
 def to_tensor(pic):
     mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
     img = torch.from_numpy(np.array(pic, mode_to_nptype.get(pic.mode, np.uint8), copy=True))
