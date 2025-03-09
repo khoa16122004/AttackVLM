@@ -111,7 +111,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
 
 
 def main(args):
-    output_dir = f"{args.output_dir}_{args.num_query}_{args.step}_{args.alpha}_{args.epsilon}_{args.sigma}"
+    output_dir = f"{args.output_dir}_{args.num_query}_{args.steps}_{args.alpha}_{args.epsilon}_{args.sigma}"
     os.makedirs(output_dir, exist_ok=True)
     
     clip_img_model_vitb32, vis_processors = clip.load("ViT-L/14", device="cuda")
