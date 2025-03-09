@@ -64,6 +64,7 @@ def clip_encode_text(txt, clip_model, detach=True):
 
 @torch.no_grad()
 def clip_encode_image(image, clip_model, vis_processor, detach=True):
+    print(image.shape)
     image = vis_processor(image)
     image_features = clip_model.encode_image(image)
     image_features = image_features / image_features.norm(dim=1, keepdim=True)
@@ -107,8 +108,6 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
         img_adv = img_adv + delta
         img_adv = torch.clamp(img_adv, 0.0, 255.0)
         adv_cap = p(model, img_adv)        
-    
-
     
     return img_adv, adv_cap[0], c_tar_embedding
 
