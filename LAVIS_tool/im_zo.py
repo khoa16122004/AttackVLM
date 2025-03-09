@@ -183,7 +183,8 @@ def main():
     image = image.to(device).unsqueeze(0)
     target_image = target_image.to(device).unsqueeze(0)
 
-    print("oriignal cap: ", p(model, image))    
+    print("oriignal cap: ", p(model, image))   
+    print("adv cap: ", tar_txt) 
     print("oriignal loss: ", blip_image_encoder(image, model) @ blip_image_encoder(target_image, model).T)
 
     # ----------------- FO attack -------------------
