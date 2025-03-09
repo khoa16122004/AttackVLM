@@ -152,7 +152,7 @@ def main():
     # original loss
     loss = clean_txt_embedding @ target_feature.T
     print("oriignal cap: ", clean_txt)   
-    print("adv cap: ", tar_txt) 
+    print("target cap: ", tar_txt) 
     print("original loss: ", loss)
     
     img_adv = image.clone()
