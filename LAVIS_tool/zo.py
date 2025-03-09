@@ -138,6 +138,7 @@ def main(args):
             basename = os.path.basename(image_path)
             
             image = image.cuda()
+            image = image.unsqueeze(0)
             c_clean = p(model, image)[0]
 
             image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.step, alpha, epsilon, sigma)
