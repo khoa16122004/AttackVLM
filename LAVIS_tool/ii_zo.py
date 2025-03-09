@@ -145,17 +145,15 @@ def main():
     image = image.to(device).unsqueeze(0)
     clean_txt = p(model, image)[0]
     clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
-    # print("Clean txt: ", clean_txt)
-    # print("target txt: ", tar_txt)
-    # g(c_tar)
+
     target_feature = clip_encode_text(tar_txt, 
                                       clip_img_model_vitb32)
     
     # original loss
     loss = clean_txt_embedding @ target_feature.T
     print("original loss: ", loss)
+    
     img_adv = image.clone()
-    best_loss = 0
     adv_cap = clean_txt
     for step in tqdm(range(args.steps)):
         clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
@@ -163,42 +161,34 @@ def main():
         # x + sigma * noise 
         image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
 
-        noise = torch.randn_like(image_repeat).sign()
+        noise = torch.randn_like(image_repeat)
         perturbed_image_repeat = torch.clamp(image_repeat + (args.sigma * noise), 0.0, 255.0)    
         
         # c = p(x + sigma * noise)
         pertubed_txt = p(model, perturbed_image_repeat)
-        # print("pertubed_txt: ", pertubed_txt)
-        # g(p(x + sigma * noise))
         pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
         
         # [g(p(x + sigma * noise)) - g(p(x))] * g(c_tar)
         coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
-        coefficient = (coefficient @ target_feature.T)    # num_query x 1
-        pseudo_gradient = coefficient.view(args.num_query, 1, 1, 1) * noise # num_query x 3 x 384 x 384 
-        pseudo_gradient = torch.sum(pseudo_gradient, dim=0)
+        # coefficient = (coefficient @ target_feature.T)    # num_query x 1
+        coefficient = torch.sum(coefficient * target_feature, dim=1)
+        pseudo_gradient = (coefficient.view(args.num_query, 1, 1, 1) * noise).mean(dim=0) # num_query x 3 x 384 x 384 
         delta = torch.clamp(args.alpha * pseudo_gradient.sign(), -args.epsilon, args.epsilon)
 
         # x + delta
         img_adv = img_adv + delta
         img_adv = torch.clamp(img_adv, 0.0, 255.0)
-        adv_cap = p(model, img_adv)
-        adv_text_feature = clip_encode_text(adv_cap, clip_img_model_vitb32)
-        loss = adv_text_feature @ target_feature.T
-        if loss > best_loss:
-            best_loss = loss
-            best_adv_img = img_adv
-            best_cap =  p(model, img_adv)           
+        adv_cap = p(model, img_adv)        
             
         print(f"[Step {step}] adv Loss: {loss}, loss adv txt: {adv_cap}")
         
     # save_image
-    print("Best loss: ", best_loss)
-    print("Best adv txt: ", best_cap)
+    clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
+    final_loss = torch.sum(clean_txt_embedding * target_feature, dim=1)
+    print("loss: ", final_loss)
+    print("adv txt: ", adv_cap)
     basename = os.path.basename(image_path)
-    torchvision.utils.save_image(best_adv_img / 255.0, os.path.join(args.output_dir, basename))
-
-
+    torchvision.utils.save_image(img_adv / 255.0, os.path.join(args.output_dir, basename))
     
 if __name__ == "__main__":
     main()

@@ -182,8 +182,8 @@ def main():
     
     image = image.to(device).unsqueeze(0)
     target_image = target_image.to(device).unsqueeze(0)
-    print(image.shape, target_image.shape)
-    
+
+    print("oriignal cap: ", p(model, image))    
     print("oriignal loss: ", blip_image_encoder(image, model) @ blip_image_encoder(target_image, model).T)
 
     # ----------------- FO attack -------------------
@@ -192,7 +192,7 @@ def main():
     print("Fo adv cap: ", fo_adv_cap)
     print("FO loss: ", blip_image_encoder(image_adv, model) @ blip_image_encoder(target_image, model).T)
     print("FO difference: ", (image_adv - image).mean())
-    torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
+    torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, "fo_" + basename))
     torchvision.utils.save_image(image, os.path.join(args.output_dir, "ori_" + basename))
     torchvision.utils.save_image(target_image, os.path.join(args.output_dir, "tar_" + basename))
 
