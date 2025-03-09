@@ -64,8 +64,7 @@ def clip_encode_text(txt, clip_model, detach=True):
 
 @torch.no_grad()
 def clip_encode_image(image, clip_model, vis_processor, detach=True):
-    print(vis_processor)
-    image = vis_processor(image)
+    image = vis_processor(image).cuda()
     image_features = clip_model.encode_image(image)
     image_features = image_features / image_features.norm(dim=1, keepdim=True)
     if detach == True:
