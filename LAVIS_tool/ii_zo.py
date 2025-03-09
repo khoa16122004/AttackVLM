@@ -163,8 +163,8 @@ def main():
         # x + sigma * noise 
         image_repeat = img_adv.repeat(args.num_query, 1, 1, 1)
 
-        noise = torch.randn_like(image_repeat)
-        perturbed_image_repeat = torch.clamp(image_repeat + (sigma * noise), 0.0, 255.0)    
+        noise = torch.randn_like(image_repeat) * sigma
+        perturbed_image_repeat = torch.clamp(image_repeat + noise, 0.0, 255.0)    
         
         # c = p(x + sigma * noise)
         pertubed_txt = p(model, perturbed_image_repeat)
@@ -185,7 +185,7 @@ def main():
         # print(f"[Step {step}] adv Loss: {loss}, loss adv txt: {adv_cap}")
         
     # save_image
-    clean_txt_embedding = clip_encode_text(clean_txt, clip_img_model_vitb32)
+    clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
     final_loss = torch.sum(clean_txt_embedding * target_feature, dim=1)
     print("loss: ", final_loss)
     print("adv txt: ", adv_cap)
