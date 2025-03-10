@@ -192,7 +192,7 @@ def main(args):
         for i in tqdm(range(args.num_samples)):
             image, gt_txt, image_path, target_image, tar_txt, target_path = data[i]
             basename = os.path.basename(image_path)
-            torchvision.utils.save_image(imaimagege_adv, "image.png")
+            torchvision.utils.save_image(image, "image.png")
 
             image = image.cuda()
             image = image.unsqueeze(0)
