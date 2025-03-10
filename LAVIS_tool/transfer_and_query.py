@@ -130,7 +130,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     for step in range(steps):
         image_adv = image_ + delta
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
-        tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
+        tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
         loss.backward()
         gradient = delta.grad.detach()
