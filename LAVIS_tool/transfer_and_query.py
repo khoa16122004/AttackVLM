@@ -116,7 +116,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
         pseudo_gradient = (coefficient.view(num_query, 1, 1, 1) * noise).mean(dim=0) # num_query x 3 x 384 x 384 
         delta = torch.clamp(alpha * pseudo_gradient.sign(), -epsilon, epsilon)
         img_adv = img_adv + delta
-        img_adv = torch.clamp(img_adv, 0.0, 1.0)
+        img_adv = img_adv, 0.0, 1.0
         adv_cap = p(model, img_adv)        
     
     return inverse_normalize(img_adv), adv_cap[0], c_tar_embedding
@@ -128,7 +128,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     delta = torch.zeros_like(image_, requires_grad=True)
     
     for step in range(steps):
-        image_adv = torch.clamp(image_ + delta, 0., 1.)
+        image_adv = image_ + delta
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
@@ -139,10 +139,8 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         delta.data = delta_data
         delta.grad.zero_()
     
-    # image_adv = inverse_normalize(torch.clamp(image + delta, 0., 1.))
-    torchvision.utils.save_image(image_, 'image_.png')
-    torchvision.utils.save_image(inverse_normalize(image_), 'image_inverse.png')
-    torchvision.utils.save_image(inverse_normalize(image_adv), 'image_adv_inverse.png')
+    image_adv = torch.clamp(inverse_normalize(image_ + delta), 0.0, 1.0)
+    torchvision.utils.save_image(inverse_normalize(image_adv), 'image_inverse.png')
     adv_cap = p(model, image_adv)
     
     return image_adv, adv_cap[0], tar_txt_embedding
@@ -152,7 +150,7 @@ def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     image_ = image.clone()    
     delta = torch.zeros_like(image_adv, requires_grad=True)
     for step in range(steps):
-        image_adv = torch.clamp(image_ + delta, 0., 1.)
+        image_adv = image_ + delta
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_txt_embedding, dim=1)
         loss.backward()
@@ -161,7 +159,7 @@ def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         delta.data = delta_data
         delta.grad.zero_()
     
-    image_adv = inverse_normalize(image_adv)
+    image_adv = torch.clamp(inverse_normalize(image_ + delta), 0.0, 1.0)
     adv_cap = p(model, image_adv)
     return image_adv, adv_cap[0], tar_txt_embedding
 
