@@ -121,7 +121,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
         img_adv = torch.clamp(img_adv, 0.0, 1.0)
         adv_cap = p(model, img_adv)        
     
-    return img_adv, adv_cap[0], c_tar_embedding
+    return inverse_normalize(img_adv), adv_cap[0], c_tar_embedding
 
 def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
@@ -139,9 +139,8 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         delta.data = delta_data
         delta.grad.zero_()
     
-    # adv_cap = p(model, inverse_normalize(image_adv))
-    adv_cap = "Khoa"
-    return image_adv, adv_cap[0], tar_txt_embedding
+    adv_cap = p(model, inverse_normalize(image_adv))
+    return inverse_normalize(image_adv), adv_cap[0], tar_txt_embedding
 
 def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
