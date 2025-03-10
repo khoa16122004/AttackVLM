@@ -123,6 +123,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32)
         tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
+        print("Loss: ", loss)
         loss.backward()
         
         gradient = image_adv.grad.detach()
@@ -183,9 +184,9 @@ def main(args):
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
                 torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
 
-            if args.method == "transfer_MF_ii":
+            elif args.method == "transfer_MF_ii":
                 image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
-                torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
+                torchvision.utils.save_image(image_adv, os.path.join(output_dir, basename))
 
             c_adv_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
             clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
