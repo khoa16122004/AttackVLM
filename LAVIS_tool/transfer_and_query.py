@@ -166,7 +166,8 @@ def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
 # BLIP -> BLIP-2 caption 384
 def main(args):
     output_dir = f"{args.output_dir}_{args.num_query}_{args.steps}_{args.alpha}_{args.epsilon}_{args.sigma}"
-    os.makedirs(output_dir, exist_ok=True)
+    if args.method != "clean_image":
+        os.makedirs(output_dir, exist_ok=True)
     
     clip_img_model_vitb32, preprocess = clip.load("ViT-B/32", device="cuda")
     clip_img_model_vitb32.eval()
