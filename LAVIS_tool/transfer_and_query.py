@@ -140,7 +140,6 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         delta.grad.zero_()
     
     image_adv = torch.clamp(inverse_normalize(image_ + delta), 0.0, 1.0)
-    torchvision.utils.save_image(inverse_normalize(image_adv), 'image_inverse.png')
     adv_cap = p(model, image_adv)
     
     return image_adv, adv_cap[0], tar_txt_embedding
@@ -148,12 +147,14 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
 def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
     image_ = image.clone()    
-    delta = torch.zeros_like(image_adv, requires_grad=True)
+    
+    delta = torch.zeros_like(image_, requires_grad=True)
     for step in range(steps):
         image_adv = image_ + delta
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_txt_embedding, dim=1)
         loss.backward()
+        print(loss)
         gradient = delta.grad.detach()
         delta_data = torch.clamp(delta +alpha * torch.sign(gradient), -epsilon, epsilon)
         delta.data = delta_data
@@ -204,7 +205,6 @@ def main(args):
             
             elif args.method == "transfer_MF_ii":
                 c_clean = p(model, inverse_normalize(image))[0]
-                torchvision.utils.save_image(image, 'image_.png')
                 image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
 
             elif args.method == "transfer_MF_it":
