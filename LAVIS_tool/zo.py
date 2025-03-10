@@ -143,7 +143,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     return image_adv, adv_cap[0], tar_txt_embedding
 
 def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
-    tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32, True, False)
+    tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
     image_adv = image.clone()
     image_adv.requires_grad = True
     
@@ -205,6 +205,7 @@ def main(args):
 
             elif args.method == "transfer_MF_it":
                 c_clean = p(model, inverse_normalize(image))[0]
+                print(c_clean)
                 image_adv, adv_cap, c_tar_embedding = it_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
                 
             elif args.method == "clean_image":
