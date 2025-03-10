@@ -134,7 +134,6 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
         loss.backward()
-        print(loss)
         gradient = delta.grad.detach()
         delta_data = torch.clamp(delta + alpha * torch.sign(gradient), -epsilon, epsilon)
         delta.data = delta_data
@@ -145,33 +144,16 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
 
 def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
-    image_adv = image.clone()
-    image_adv.requires_grad = True
-    
-    for step in range(steps):
-        clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
-        loss = torch.sum(clean_image_embedding * tar_txt_embedding, dim=1)
-        loss.backward()
-        gradient = image_adv.grad.detach()
-        delta = torch.clamp(alpha * torch.sign(gradient), -epsilon, epsilon)
-        image_adv.data = torch.clamp(image_adv + delta, 0.0, 1.0)
-        image_adv.grad.zero_()
-        
-    adv_cap = p(model, inverse_normalize(image_adv))
-    return image_adv, adv_cap[0], tar_txt_embedding
-def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
-    tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
-    image_ = image.clone()
-    image_adv.requires_grad = True
-    
+    image_ = image.clone()    
     delta = torch.zeros_like(image_adv, requires_grad=True)
     for step in range(steps):
-        image_adv = image_ + delta
+        image_adv = torch.clamp(image + delta, 0., 1.)
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_txt_embedding, dim=1)
         loss.backward()
         gradient = delta.grad.detach()
-        delta = torch.clamp(alpha * torch.sign(gradient), -epsilon, epsilon)
+        delta_data = torch.clamp(delta +alpha * torch.sign(gradient), -epsilon, epsilon)
+        delta.data = delta_data
         delta.grad.zero_()
         
     adv_cap = p(model, inverse_normalize(image_adv))
