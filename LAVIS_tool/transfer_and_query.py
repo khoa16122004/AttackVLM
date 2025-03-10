@@ -139,8 +139,10 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         delta.data = delta_data
         delta.grad.zero_()
     
-    image_adv = inverse_normalize(torch.clamp(image + delta, 0., 1.))
-    torchvision.utils.save_image(image_adv, 'image_adv.png')
+    # image_adv = inverse_normalize(torch.clamp(image + delta, 0., 1.))
+    torchvision.utils.save_image(image_, 'image_.png')
+    torchvision.utils.save_image(inverse_normalize(image_), 'image_inverse.png')
+    torchvision.utils.save_image(inverse_normalize(image_adv), 'image_adv_inverse.png')
     adv_cap = p(model, image_adv)
     
     return image_adv, adv_cap[0], tar_txt_embedding
