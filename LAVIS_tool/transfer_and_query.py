@@ -133,7 +133,6 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
         loss.backward()
-        print(loss)
         gradient = delta.grad.detach()
         delta_data = torch.clamp(delta + alpha * torch.sign(gradient), -epsilon, epsilon)
         delta.data = delta_data
@@ -154,7 +153,6 @@ def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_txt_embedding, dim=1)
         loss.backward()
-        print(loss)
         gradient = delta.grad.detach()
         delta_data = torch.clamp(delta +alpha * torch.sign(gradient), -epsilon, epsilon)
         delta.data = delta_data
