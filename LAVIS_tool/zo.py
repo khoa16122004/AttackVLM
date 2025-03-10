@@ -186,14 +186,13 @@ def main(args):
             elif args.method == "transfer_MF_ii":
                 image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
                 torchvision.utils.save_image(image_adv, os.path.join(output_dir, basename))
-                print(adv_cap)
 
             c_adv_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
             clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
             clip_scores += clip_score
             
             f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
-            break            
+            # break            
     clip_scores = clip_scores / args.num_samples
     print(f"Average clip score: {clip_scores}")
     
