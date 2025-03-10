@@ -169,7 +169,7 @@ def main(args):
     if args.method != "clean_image":
         os.makedirs(output_dir, exist_ok=True)
     
-    clip_img_model_vitb32, preprocess = clip.load("ViT-L/14", device="cuda")
+    clip_img_model_vitb32, preprocess = clip.load("ViT-B/16", device="cuda")
     clip_img_model_vitb32.eval()
     
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device="cuda")
