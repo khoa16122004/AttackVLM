@@ -134,6 +134,10 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     adv_cap = p(model, inverse_normalize(image_adv))
     return image_adv, adv_cap[0], tar_txt_embedding
 
+
+
+# CLIP -> BLIP-2 opt
+# BLIP -> BLIP-2 caption
 def main(args):
     output_dir = f"{args.output_dir}_{args.num_query}_{args.steps}_{args.alpha}_{args.epsilon}_{args.sigma}"
     os.makedirs(output_dir, exist_ok=True)
@@ -172,7 +176,7 @@ def main(args):
             image = image.cuda()
             image = image.unsqueeze(0)
             c_clean = p(model, image)[0]
-
+            print("c_clean: ", c_clean)
             if args.method == "zo_MF_tt": 
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
                 torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
