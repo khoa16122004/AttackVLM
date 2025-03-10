@@ -155,11 +155,7 @@ def main(args):
         alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
 
     elif args.method == "transfer_MF_ii":
-        data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
-                             torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
-                                                            torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
-                                                            torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
-                            )
+        data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, preprocess)
         alpha, epsilon, sigma = args.alpha, args.epsilon, args.sigma
 
     clip_scores = 0
