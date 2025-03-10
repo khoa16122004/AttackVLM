@@ -218,7 +218,7 @@ def main(args):
             clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
             clip_scores += clip_score
             if args.method != "clean_image":
-                torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
+                torchvision.utils.save_image(image_adv, os.path.join(output_dir, basename))
                 f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
             break            
     clip_scores = clip_scores / args.num_samples
