@@ -183,7 +183,7 @@ def main(args):
                                                             torchvision.transforms.Lambda(lambda img: to_tensor(img))]),
                              args.num_samples)
 
-    elif args.method == "transfer_MF_ii" or args.method == "transfer_MF_it":
+    elif args.method == "transfer_MF_ii":
 
         data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, preprocess, args.num_samples)
             
