@@ -207,12 +207,12 @@ def main(args):
             
             elif args.method == "transfer_MF_ii":
                 c_clean = p(model, inverse_normalize(image))[0]
-                image_adv, adv_cap = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, evaluate_clip_model, args.steps, alpha, epsilon)
+                image_adv, adv_cap = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
                 print(adv_cap)
                 
             elif args.method == "transfer_MF_it":
                 c_clean = p(model, inverse_normalize(image))[0]
-                image_adv, adv_cap = it_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, evaluate_clip_model, args.steps, alpha, epsilon)
+                image_adv, adv_cap = it_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
                 print(adv_cap)
                 
             elif args.method == "clean_image":
