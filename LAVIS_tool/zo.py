@@ -183,10 +183,10 @@ def main(args):
             if args.method == "zo_MF_tt": 
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
                 torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
-                print(adv_cap)
             elif args.method == "transfer_MF_ii":
                 image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
                 torchvision.utils.save_image(image_adv, os.path.join(output_dir, basename))
+                print(adv_cap)
 
             c_adv_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
             clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
