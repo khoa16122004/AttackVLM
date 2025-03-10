@@ -151,6 +151,7 @@ def main(args):
     alpha, epsilon, sigma = args.alpha, args.epsilon, args.sigma
 
     if args.method == "zo_MF_tt":
+        print(args.num_samples)
         data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
                              torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
                                                             torchvision.transforms.Resize(size=(224, 224), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
