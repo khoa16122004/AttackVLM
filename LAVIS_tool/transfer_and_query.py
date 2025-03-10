@@ -148,7 +148,6 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
 def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
     image_ = image.clone()    
-    torchvision.utils.save_image(inverse_normalize(image_), 'image.png')
     delta = torch.zeros_like(image_adv, requires_grad=True)
     for step in range(steps):
         image_adv = torch.clamp(image_ + delta, 0., 1.)
@@ -160,8 +159,8 @@ def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         delta.data = delta_data
         delta.grad.zero_()
     
-    
-    adv_cap = p(model, inverse_normalize(image_adv))
+    image_adv = inverse_normalize(image_adv)
+    adv_cap = p(model, image_adv)
     return image_adv, adv_cap[0], tar_txt_embedding
 
 # CLIP -> BLIP-2 opt 224
