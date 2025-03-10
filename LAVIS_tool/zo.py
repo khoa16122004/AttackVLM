@@ -85,7 +85,7 @@ inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862
 @torch.no_grad()
 def p(model, image):
     image_ = image.clone()
-    image_ = normalize(image_ / 255.0)
+    # image_ = normalize(image_ / 255.0)
     samples  = {"image": image_}
     caption  = model.generate(samples, use_nucleus_sampling=True, num_captions=1)
     return caption
