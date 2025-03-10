@@ -54,19 +54,29 @@ class CustomDataset(Dataset):
 
 
 
-@torch.no_grad()
-def clip_encode_text(txt, clip_model, detach=True):
+def clip_encode_text(txt, clip_model, gradient=False, detach=True):
     text_token = clip.tokenize(txt).cuda()
-    target_text_features = clip_model.encode_text(text_token)
+    if gradient == False:
+        with torch.no_grad():
+            target_text_features = clip_model.encode_text(text_token)
+    else:
+        target_text_features = clip_model.encode_text(text_token)
+        
     target_text_features = target_text_features / target_text_features.norm(dim=1, keepdim=True)
     if detach == True:
         target_text_features = target_text_features.detach()
     return target_text_features
 
-def clip_encode_image(image, clip_model, vis_processor=None, detach=False):
+def clip_encode_image(image, clip_model, vis_processor=None, gradient=False,detach=True):
     if vis_processor:
         image = vis_processor(image).cuda().unsqueeze(0)
-    image_features = clip_model.encode_image(image)
+        
+    if gradient == False:
+        with torch.no_grad():
+            image_features = clip_model.encode_image(image)
+    else:
+        image_features = clip_model.encode_image(image)
+        
     image_features = image_features / image_features.norm(dim=1, keepdim=True)
     if detach == True:
         image_features = image_features.detach()
@@ -121,8 +131,8 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     image_adv.requires_grad = True
     
     for step in range(args.steps):
-        clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32)
-        tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32)
+        clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
+        tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
         loss.backward()
         
@@ -134,10 +144,26 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     adv_cap = p(model, inverse_normalize(image_adv))
     return image_adv, adv_cap[0], tar_txt_embedding
 
+def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
+    tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32, True, False)
+    image_adv = image.clone()
+    image_adv.requires_grad = True
+    
+    for step in range(args.steps):
+        clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
+        loss = torch.sum(clean_image_embedding * tar_txt_embedding, dim=1)
+        loss.backward()
+        print("loss: ", loss)
+        gradient = image_adv.grad.detach()
+        delta = torch.clamp(alpha * torch.sign(gradient), -epsilon, epsilon)
+        image_adv.data = torch.clamp(image_adv + delta, 0.0, 1.0)
+        image_adv.grad.zero_()
+        
+    adv_cap = p(model, inverse_normalize(image_adv))
+    return image_adv, adv_cap[0], tar_txt_embedding
 
-
-# CLIP -> BLIP-2 opt
-# BLIP -> BLIP-2 caption
+# CLIP -> BLIP-2 opt 224
+# BLIP -> BLIP-2 caption 384
 def main(args):
     output_dir = f"{args.output_dir}_{args.num_query}_{args.steps}_{args.alpha}_{args.epsilon}_{args.sigma}"
     os.makedirs(output_dir, exist_ok=True)
@@ -150,7 +176,7 @@ def main(args):
     
     alpha, epsilon, sigma = args.alpha, args.epsilon, args.sigma
 
-    if args.method == "zo_MF_tt":
+    if args.method == "zo_MF_tt" or args.method == "clean_image":
         data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
                              torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
                                                             torchvision.transforms.Resize(size=(224, 224), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
@@ -160,7 +186,7 @@ def main(args):
     elif args.method == "transfer_MF_ii":
 
         data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, preprocess, args.num_samples)
-
+            
     clip_scores = 0
     with open(f"{output_dir}.txt", "w") as f:
         for i in tqdm(range(args.num_samples)):
@@ -174,19 +200,28 @@ def main(args):
             
             if args.method == "zo_MF_tt": 
                 c_clean = p(model, image)[0]
-                print("c_clean: ", c_clean)
-                continue
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
             
             elif args.method == "transfer_MF_ii":
                 c_clean = p(model, inverse_normalize(image))[0]
                 image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
 
+            elif args.method == "transfer_MF_it":
+                c_clean = p(model, inverse_normalize(image))[0]
+                image_adv, adv_cap, c_tar_embedding = it_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
+                
+            elif args.method == "clean_image":
+                image_adv = image.clone()
+                adv_cap = p(model, image_adv)[0]
+                c_tar_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
+
+
             c_adv_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
             clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
             clip_scores += clip_score
-            torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
-            f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
+            if args.method != "clean_image":
+                torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
+                f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
             # break            
     clip_scores = clip_scores / args.num_samples
     print(f"Average clip score: {clip_scores}")
