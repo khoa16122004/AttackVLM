@@ -119,7 +119,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
         img_adv = torch.clamp(img_adv, 0.0, 1.0)
         adv_cap = p(model, img_adv)        
     
-    return inverse_normalize(img_adv), adv_cap[0], c_tar_embedding
+    return inverse_normalize(img_adv), adv_cap[0]
 
 def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
@@ -141,7 +141,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     image_adv = torch.clamp(inverse_normalize(image_ + delta), 0.0, 1.0)
     adv_cap = p(model, image_adv)
     
-    return image_adv, adv_cap[0], tar_txt_embedding
+    return image_adv, adv_cap[0]
 
 def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
@@ -160,7 +160,7 @@ def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     
     image_adv = torch.clamp(inverse_normalize(image_ + delta), 0.0, 1.0)
     adv_cap = p(model, image_adv)
-    return image_adv, adv_cap[0], tar_txt_embedding
+    return image_adv, adv_cap[0]
 
 # CLIP -> BLIP-2 opt 224
 # BLIP -> BLIP-2 caption 384
@@ -203,24 +203,24 @@ def main(args):
             
             if args.method == "zo_MF_tt": 
                 c_clean = p(model, image)[0]
-                image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
+                image_adv, adv_cap = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
             
             elif args.method == "transfer_MF_ii":
                 c_clean = p(model, inverse_normalize(image))[0]
-                image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
+                image_adv, adv_cap = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, evaluate_clip_model, args.steps, alpha, epsilon)
 
             elif args.method == "transfer_MF_it":
                 c_clean = p(model, inverse_normalize(image))[0]
-                image_adv, adv_cap, c_tar_embedding = it_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
+                image_adv, adv_cap = it_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, evaluate_clip_model, args.steps, alpha, epsilon)
                 
             elif args.method == "clean_image":
                 image_adv = image.clone()
                 adv_cap = p(model, image_adv)[0]
-                c_tar_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
 
 
-            c_adv_embedding = clip_encode_text(adv_cap, evaluate_preprocess)
-            clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
+            c_adv_embedding = clip_encode_text(adv_cap, evaluate_clip_model)
+            c_target_embedidng = clip_encode_text(tar_txt, evaluate_clip_model)
+            clip_score = torch.sum(c_target_embedidng * c_adv_embedding, dim=1)
             clip_scores += clip_score
             if args.method != "clean_image":
                 torchvision.utils.save_image(image_adv, os.path.join(output_dir, basename))
