@@ -63,8 +63,9 @@ def clip_encode_text(txt, clip_model, detach=True):
     return target_text_features
 
 @torch.no_grad()
-def clip_encode_image(image, clip_model, vis_processor, detach=True):
-    image = vis_processor(image).cuda().unsqueeze(0)
+def clip_encode_image(image, clip_model, vis_processor=None, detach=True):
+    if vis_processor:
+        image = vis_processor(image).cuda().unsqueeze(0)
     image_features = clip_model.encode_image(image)
     image_features = image_features / image_features.norm(dim=1, keepdim=True)
     if detach == True:
@@ -77,6 +78,10 @@ normalize = torchvision.transforms.Compose(
         torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
     ]
 )
+
+inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862954, -0.4578275 / 0.26130258, -0.40821073 / 0.27577711], std=[1.0 / 0.26862954, 1.0 / 0.26130258, 1.0 / 0.27577711])
+
+
 @torch.no_grad()
 def p(model, image):
     image_ = image.clone()
@@ -110,6 +115,25 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
     
     return img_adv, adv_cap[0], c_tar_embedding
 
+def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
+    tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
+    image_adv = image.clone()
+    image_adv.requires_grad = True
+    
+    for step in range(args.steps):
+        clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32)
+        tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32)
+        loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
+        loss.backward()
+        
+        gradient = image_adv.grad.detach()
+        delta = torch.clamp(alpha * torch.sign(gradient), -epsilon, epsilon)
+        image_adv.data = torch.clamp(image_adv + delta, 0.0, 1.0)
+        image_adv.grad.zero_()
+        
+    adv_cap = p(model, inverse_normalize(image_adv))
+    c_tar_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
+    return image_adv, adv_cap[0], c_tar_embedding
 
 def main(args):
     output_dir = f"{args.output_dir}_{args.num_query}_{args.steps}_{args.alpha}_{args.epsilon}_{args.sigma}"
@@ -121,13 +145,21 @@ def main(args):
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device="cuda")
     model.eval()
     
-    data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
-                         torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
-                                                         torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
-                                                         torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
-                        )
+    
+    
+    if args.method == "zo_MF_tt":
+        data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
+                             torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
+                                                            torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
+                                                            torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
+                            )
+        alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
+
+    elif args.method == "transfer_MF_ii":
+        data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, preprocess)
+        alpha, epsilon, sigma = args.alpha, args.epsilon, args.sigma
+
     clip_scores = 0
-    alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
     with open(f"{output_dir}.txt", "w") as f:
         for i in tqdm(range(args.num_samples)):
             image, gt_txt, image_path, target_image, tar_txt, target_path = data[i]
@@ -135,14 +167,20 @@ def main(args):
             
             image = image.cuda()
             image = image.unsqueeze(0)
-            c_clean = p(model, image)[0]
+            c_clean = p(model, inverse_normalize(image))[0]
 
-            image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
+            if args.method == "zo_MF_tt": 
+                image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
+                torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
+
+            if args.method == "transfer_MF_ii":
+                image_adv, adv_cap, c_tar_embedding = ii_fo(image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
+                torchvision.utils.save_image(image_adv, os.path.join(args.output_dir, basename))
+
             c_adv_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
             clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
             clip_scores += clip_score
             
-            torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
             f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
             
     clip_scores = clip_scores / args.num_samples
@@ -150,6 +188,7 @@ def main(args):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--method", type=str, choices=['transfer_MF_ii', 'transfer_MF_it', 'zo_MF_tt', "clean_image"])
     parser.add_argument("--steps", default=8, type=int)
     parser.add_argument("--alpha", default=0.2, type=float)
     parser.add_argument("--epsilon", default=0.001, type=float)
