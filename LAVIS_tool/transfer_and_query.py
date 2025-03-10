@@ -40,8 +40,8 @@ class CustomDataset(Dataset):
         tar_txt = self.tar_txts[idx]
         target_path = os.path.join(self.target_dir, self.file_names[idx])
 
-        image = Image.open(image_path)
-        target_image = Image.open(target_path)
+        image = Image.open(image_path).convert("RGB")
+        target_image = Image.open(target_path).convert("RGB")
 
         # image_processed = vis_processors["eval"](image)
         # target_image_processed = vis_processors["eval"](target_image)
@@ -138,8 +138,6 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         delta_data = torch.clamp(delta + alpha * torch.sign(gradient), -epsilon, epsilon)
         delta.data = delta_data
         delta.grad.zero_()
-    torchvision.utils.save_image(image, "image_.png")
-    torchvision.utils.save_image(image_adv, "adv_image_.png")
     
     image_adv = inverse_normalize(torch.clamp(image + delta, 0., 1.))
 
@@ -194,7 +192,8 @@ def main(args):
         for i in tqdm(range(args.num_samples)):
             image, gt_txt, image_path, target_image, tar_txt, target_path = data[i]
             basename = os.path.basename(image_path)
-            
+            torchvision.utils.save_image(imaimagege_adv, "image.png")
+
             image = image.cuda()
             image = image.unsqueeze(0)
             target_image = target_image.cuda()
