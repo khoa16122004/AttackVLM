@@ -178,6 +178,7 @@ def main(args):
             target_image = target_image.cuda()
             target_image = target_image.unsqueeze(0)
             
+            print("gt_txt: ", gt_txt)
             c_clean = p(model, inverse_normalize(image))[0]
             print("c_clean: ", c_clean)
             if args.method == "zo_MF_tt": 
