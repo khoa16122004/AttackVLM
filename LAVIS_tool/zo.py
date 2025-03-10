@@ -156,6 +156,11 @@ def main(args):
 
     elif args.method == "transfer_MF_ii":
         data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, preprocess)
+        # data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
+        #                 torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
+        #                                             torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
+        #                                             torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
+        #             )
         alpha, epsilon, sigma = args.alpha, args.epsilon, args.sigma
 
     clip_scores = 0
@@ -166,7 +171,7 @@ def main(args):
             
             image = image.cuda()
             image = image.unsqueeze(0)
-            c_clean = p(model, inverse_normalize(image))[0]
+            c_clean = p(model, image)[0]
 
             if args.method == "zo_MF_tt": 
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
