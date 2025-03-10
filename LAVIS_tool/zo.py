@@ -62,8 +62,7 @@ def clip_encode_text(txt, clip_model, detach=True):
         target_text_features = target_text_features.detach()
     return target_text_features
 
-@torch.no_grad()
-def clip_encode_image(image, clip_model, vis_processor=None, detach=True):
+def clip_encode_image(image, clip_model, vis_processor=None, detach=False):
     if vis_processor:
         image = vis_processor(image).cuda().unsqueeze(0)
     image_features = clip_model.encode_image(image)
@@ -83,7 +82,7 @@ inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862
 
 
 @torch.no_grad()
-def p(model, image):
+def p(model, image): # input not normalize
     image_ = image.clone()
     # image_ = normalize(image_ / 255.0)
     samples  = {"image": image_}
@@ -178,9 +177,8 @@ def main(args):
             target_image = target_image.cuda()
             target_image = target_image.unsqueeze(0)
             
-            print("gt_txt: ", gt_txt)
             c_clean = p(model, inverse_normalize(image))[0]
-            print("c_clean: ", c_clean)
+            # print("c_clean: ", c_clean)
             if args.method == "zo_MF_tt": 
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
                 torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
