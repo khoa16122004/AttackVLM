@@ -124,7 +124,6 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
 def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
     image_ = image.clone()
-    torchvision.utils.save_image(image_, 'image_.png')
 
     delta = torch.zeros_like(image_, requires_grad=True)
     
@@ -149,6 +148,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
 def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
     image_ = image.clone()    
+    torchvision.utils.save_image(inverse_normalize(image_), 'image.png')
     delta = torch.zeros_like(image_adv, requires_grad=True)
     for step in range(steps):
         image_adv = torch.clamp(image_ + delta, 0., 1.)
@@ -205,6 +205,7 @@ def main(args):
             
             elif args.method == "transfer_MF_ii":
                 c_clean = p(model, inverse_normalize(image))[0]
+                torchvision.utils.save_image(image, 'image_.png')
                 image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
 
             elif args.method == "transfer_MF_it":
