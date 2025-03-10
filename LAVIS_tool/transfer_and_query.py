@@ -223,7 +223,7 @@ def main(args):
             if args.method != "clean_image":
                 torchvision.utils.save_image(image_adv, os.path.join(output_dir, basename))
                 f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
-            break            
+            # break            
     clip_scores = clip_scores / args.num_samples
     print(f"Average clip score: {clip_scores}")
     
