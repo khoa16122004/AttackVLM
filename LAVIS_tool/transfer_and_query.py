@@ -86,9 +86,7 @@ normalize = torchvision.transforms.Compose(
         torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
     ]
 )
-
 inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862954, -0.4578275 / 0.26130258, -0.40821073 / 0.27577711], std=[1.0 / 0.26862954, 1.0 / 0.26130258, 1.0 / 0.27577711])
-
 
 @torch.no_grad()
 def p(model, image):
@@ -129,18 +127,19 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     delta = torch.zeros_like(image_, requires_grad=True)
     
     for step in range(steps):
-        image_adv = torch.clamp(image + delta, 0., 1.)
+        image_adv = torch.clamp(image_ + delta, 0., 1.)
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
         loss.backward()
+        print(loss)
         gradient = delta.grad.detach()
         delta_data = torch.clamp(delta + alpha * torch.sign(gradient), -epsilon, epsilon)
         delta.data = delta_data
         delta.grad.zero_()
     
     image_adv = inverse_normalize(torch.clamp(image + delta, 0., 1.))
-
+    torchvision.utils.save_image(image_adv, 'image_adv.png')
     adv_cap = p(model, image_adv)
     
     return image_adv, adv_cap[0], tar_txt_embedding
@@ -192,7 +191,6 @@ def main(args):
         for i in tqdm(range(args.num_samples)):
             image, gt_txt, image_path, target_image, tar_txt, target_path = data[i]
             basename = os.path.basename(image_path)
-            torchvision.utils.save_image(inverse_normalize(image), "image.png")
 
             image = image.cuda()
             image = image.unsqueeze(0)
