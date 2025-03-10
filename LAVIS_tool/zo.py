@@ -67,9 +67,7 @@ def clip_encode_text(txt, clip_model, gradient=False, detach=True):
         target_text_features = target_text_features.detach()
     return target_text_features
 
-def clip_encode_image(image, clip_model, vis_processor=None, gradient=False,detach=True):
-    if vis_processor:
-        image = vis_processor(image).cuda().unsqueeze(0)
+def clip_encode_image(image, clip_model, gradient=False,detach=True):
         
     if gradient == False:
         with torch.no_grad():
@@ -130,7 +128,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     image_adv = image.clone()
     image_adv.requires_grad = True
     
-    for step in range(args.steps):
+    for step in range(steps):
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
@@ -149,7 +147,7 @@ def it_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
     image_adv = image.clone()
     image_adv.requires_grad = True
     
-    for step in range(args.steps):
+    for step in range(steps):
         clean_image_embedding = clip_encode_image(image_adv, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_txt_embedding, dim=1)
         loss.backward()
