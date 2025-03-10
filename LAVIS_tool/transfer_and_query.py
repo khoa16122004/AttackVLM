@@ -136,8 +136,8 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         loss.backward()
         print(loss)
         gradient = delta.grad.detach()
-        delta = torch.clamp(delta + alpha * torch.sign(gradient), -epsilon, epsilon)
-        delta.data = delta
+        delta_data = torch.clamp(delta + alpha * torch.sign(gradient), -epsilon, epsilon)
+        delta.data = delta_data
         delta.grad.zero_()
         
     adv_cap = p(model, inverse_normalize(image_adv))
