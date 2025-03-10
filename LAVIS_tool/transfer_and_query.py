@@ -169,8 +169,11 @@ def main(args):
     if args.method != "clean_image":
         os.makedirs(output_dir, exist_ok=True)
     
-    clip_img_model_vitb32, preprocess = clip.load("ViT-L/14", device="cuda")
+    clip_img_model_vitb32, preprocess = clip.load("ViT-B/32", device="cuda")
     clip_img_model_vitb32.eval()
+    
+    evaluate_clip_model, evaluate_preprocess = clip.load(args.clip_score_model, device="cuda")
+    evaluate_clip_model.eval()
     
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device="cuda")
     model.eval()
@@ -216,7 +219,7 @@ def main(args):
                 c_tar_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
 
 
-            c_adv_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
+            c_adv_embedding = clip_encode_text(adv_cap, evaluate_preprocess)
             clip_score = torch.sum(c_tar_embedding * c_adv_embedding, dim=1)
             clip_scores += clip_score
             if args.method != "clean_image":
@@ -241,6 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", default="blip_caption", type=str)
     parser.add_argument("--model_type", default="base_coco", type=str)
     parser.add_argument("--num_samples", type=int, default=100)
+    parser.add_argument("--clip_score_model", type=str)
     args = parser.parse_args()
     
     main(args)
