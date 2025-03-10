@@ -18,13 +18,13 @@ def to_tensor(pic):
     return img.to(dtype=torch.get_default_dtype())
 
 class CustomDataset(Dataset):
-    def __init__(self, annotations_file, image_dir, target_dir, transform=None):
+    def __init__(self, annotations_file, image_dir, target_dir, num_sample, transform=None):
         with open(annotations_file, "r") as f:
             lines = [line.strip().split("\t") for line in f.readlines()]
-            self.file_names = [line[0] for line in lines]
-            self.gt_txts = [line[1] for line in lines]
-            self.tar_txts = [line[2] for line in lines]
-            
+            self.file_names = [line[0] for line in lines][:num_sample]
+            self.gt_txts = [line[1] for line in lines][:num_sample]
+            self.tar_txts = [line[2] for line in lines][:num_sample]
+        
         self.image_dir = image_dir
         self.target_dir = target_dir
         self.transform = transform
@@ -147,18 +147,17 @@ def main(args):
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device="cuda")
     model.eval()
     
-    
-    
     if args.method == "zo_MF_tt":
         data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
                              torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
-                                                            torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
-                                                            torchvision.transforms.Lambda(lambda img: to_tensor(img)),])
-                            )
+                                                            torchvision.transforms.Resize(size=(224, 224), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
+                                                            torchvision.transforms.Lambda(lambda img: to_tensor(img))]),
+                             args.num_samples)
         alpha, epsilon, sigma = args.alpha * 255, args.epsilon * 255, args.sigma * 255
 
     elif args.method == "transfer_MF_ii":
-        data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, preprocess)
+
+        data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir, preprocess, args.num_samples)
         # data = CustomDataset(args.annotation_path, args.image_dir, args.target_dir,
         #                 torchvision.transforms.Compose([torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
         #                                             torchvision.transforms.Resize(size=(384, 384), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
@@ -182,6 +181,7 @@ def main(args):
             if args.method == "zo_MF_tt": 
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
                 torchvision.utils.save_image(image_adv / 255.0, os.path.join(args.output_dir, basename))
+            
             elif args.method == "transfer_MF_ii":
                 image_adv, adv_cap, c_tar_embedding = ii_fo(image, target_image, tar_txt, model, clip_img_model_vitb32, args.steps, alpha, epsilon)
                 torchvision.utils.save_image(image_adv, os.path.join(output_dir, basename))
