@@ -134,7 +134,7 @@ def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha,
         tar_image_embedding = clip_encode_image(tar_image, clip_img_model_vitb32, True, False)
         loss = torch.sum(clean_image_embedding * tar_image_embedding, dim=1)
         loss.backward()
-        
+        print(loss)
         gradient = delta.grad.detach()
         delta = torch.clamp(alpha * torch.sign(gradient), -epsilon, epsilon)
         delta.data = delta
