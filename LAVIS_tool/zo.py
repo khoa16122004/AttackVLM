@@ -19,7 +19,7 @@ def to_tensor(pic):
     return img.to(dtype=torch.get_default_dtype())
 
 class CustomDataset(Dataset):
-    def __init__(self, annotations_file, image_dir, target_dir, num_sample, transform=None):
+    def __init__(self, annotations_file, image_dir, target_dir, transform=None, num_sample=1000):
         with open(annotations_file, "r") as f:
             lines = [line.strip().split("\t") for line in f.readlines()]
             self.file_names = [line[0] for line in lines][:num_sample]
