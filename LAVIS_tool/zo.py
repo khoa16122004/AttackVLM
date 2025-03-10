@@ -182,7 +182,7 @@ def main(args):
             clip_scores += clip_score
             
             f.write(f"{basename}\t{c_clean}\t{tar_txt}\t{adv_cap}\n")
-            
+            break            
     clip_scores = clip_scores / args.num_samples
     print(f"Average clip score: {clip_scores}")
     
