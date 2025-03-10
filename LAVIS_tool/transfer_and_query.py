@@ -116,7 +116,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
         pseudo_gradient = (coefficient.view(num_query, 1, 1, 1) * noise).mean(dim=0) # num_query x 3 x 384 x 384 
         delta = torch.clamp(alpha * pseudo_gradient.sign(), -epsilon, epsilon)
         img_adv = img_adv + delta
-        img_adv = img_adv, 0.0, 1.0
+        img_adv = torch.clamp(img_adv, 0.0, 1.0)
         adv_cap = p(model, img_adv)        
     
     return inverse_normalize(img_adv), adv_cap[0], c_tar_embedding
