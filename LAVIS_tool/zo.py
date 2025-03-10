@@ -175,7 +175,7 @@ def main(args):
             if args.method == "zo_MF_tt": 
                 c_clean = p(model, image)[0]
                 print("c_clean: ", c_clean)
-
+                continue
                 image_adv, adv_cap, c_tar_embedding = tt_zo(image, c_clean, tar_txt, model, clip_img_model_vitb32, args.num_query, args.steps, alpha, epsilon, sigma)
             
             elif args.method == "transfer_MF_ii":
