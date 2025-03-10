@@ -40,8 +40,8 @@ class CustomDataset(Dataset):
         tar_txt = self.tar_txts[idx]
         target_path = os.path.join(self.target_dir, self.file_names[idx])
 
-        image = Image.open(image_path).convert("RGB")
-        target_image = Image.open(target_path).convert("RGB")
+        image = Image.open(image_path)
+        target_image = Image.open(target_path)
 
         # image_processed = vis_processors["eval"](image)
         # target_image_processed = vis_processors["eval"](target_image)
