@@ -25,7 +25,7 @@ def main(args):
         
         
     
-    clip_score_model_names = ["Vit-B/32", "Vit-L/14", "ViT-B/16"]
+    clip_score_model_names = ["ViT-B/32", "ViT-L/14", "ViT-B/16"]
     for model_name in clip_score_model_names:
         evaluate_clip_model, evaluate_preprocess = clip.load(model_name, device="cuda")
         evaluate_clip_model.eval()
