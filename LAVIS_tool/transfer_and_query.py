@@ -216,8 +216,6 @@ def main(args):
             elif args.method == "clean_image":
                 image_adv = image.clone()
                 adv_cap = p(model, image_adv)[0]
-                print(adv_cap)
-                print("Khoa")
 
 
             c_adv_embedding = clip_encode_text(adv_cap, evaluate_clip_model)
