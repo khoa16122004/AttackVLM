@@ -22,6 +22,7 @@ def main(args):
         lines = [line.strip().split("\t") for line in f.readlines()]
         adv_cap = [line[3] for line in lines]
         tar_cap = [line[2] for line in lines]
+        c_clean = [line[1] for line in lines]
         
         
     
@@ -32,9 +33,11 @@ def main(args):
         
         adv_cap_embedding = clip_encode_text(adv_cap, evaluate_clip_model)
         tar_cap_embedding = clip_encode_text(tar_cap, evaluate_clip_model)
+        c_clean_embedding = clip_encode_text(c_clean, evaluate_clip_model)
         
         score = torch.sum(adv_cap_embedding * tar_cap_embedding, dim=1)
-        print(f"{model_name}, {torch.mean(score).item()}")
+        clean_score = torch.sum(c_clean_embedding * tar_cap_embedding, dim=1)
+        print(f"{model_name}, {torch.mean(score).item()}, {torch.mean(clean_score).item()}")
         
         
 
