@@ -40,7 +40,6 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output_dir", default="zo", type=str)
     parser.add_argument("--result_path", type=str)
     args = parser.parse_args()
     
