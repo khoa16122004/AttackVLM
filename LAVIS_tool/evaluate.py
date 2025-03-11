@@ -16,7 +16,7 @@ def clip_encode_text(txt, clip_model, gradient=False, detach=True):
     if detach == True:
         target_text_features = target_text_features.detach()
     return target_text_features
-def main():
+def main(args):
     
     with open(args.result_path, "r") as f:
         lines = [line.strip().split("\t") for line in f.readlines()]
