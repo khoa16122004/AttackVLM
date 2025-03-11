@@ -35,7 +35,7 @@ def main(args):
     model, vis_processors, txt_processors = load_model_and_preprocess(name=args.model_name, model_type=args.model_type, is_eval=True, device="cuda")
     model.eval()
     img = Image.open(args.img_path).convert("RGB")
-    img = transform(img).cuda()
+    img = transform(img).cuda().unsqueeze(0)
     
     caption = p(model, img)
     print(caption)   
