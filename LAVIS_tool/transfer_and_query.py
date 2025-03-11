@@ -22,9 +22,9 @@ class CustomDataset(Dataset):
     def __init__(self, annotations_file, image_dir, target_dir, transform=None, num_sample=1000):
         with open(annotations_file, "r") as f:
             lines = [line.strip().split("\t") for line in f.readlines()]
-            self.file_names = [line[0] for line in lines][:num_sample][500:]
-            self.gt_txts = [line[1] for line in lines][:num_sample][500:]
-            self.tar_txts = [line[2] for line in lines][:num_sample][500:]
+            self.file_names = [line[0] for line in lines][:num_sample]
+            self.gt_txts = [line[1] for line in lines][:num_sample]
+            self.tar_txts = [line[2] for line in lines][:num_sample]
         
         self.image_dir = image_dir
         self.target_dir = target_dir
