@@ -119,7 +119,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
         img_adv = torch.clamp(img_adv, 0.0, 1.0)
         adv_cap = p(model, img_adv)        
     
-    return inverse_normalize(img_adv), adv_cap[0]
+    return img_adv, adv_cap[0]
 
 def ii_fo(image, tar_image, tar_txt, model, clip_img_model_vitb32, steps, alpha, epsilon):
     tar_txt_embedding = clip_encode_text(tar_txt, clip_img_model_vitb32)
