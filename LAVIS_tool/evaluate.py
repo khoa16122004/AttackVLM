@@ -32,7 +32,9 @@ def main(args):
         lines = [line.strip().split("\t") for line in f.readlines()]
         adv_cap = [line[3] for line in lines]
         tar_cap = [line[2] for line in lines]
-        c_clean = [line[1] for line in lines]
+        
+    with open(args.annotation_path, "r") as r:
+        c_clean = [r.readline().strip().split("\t")[1] for _ in range(len(adv_cap))]
         
         
     
@@ -54,6 +56,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--result_path", type=str)
+    parser.add_argument("--annotation_path", type=str)
     args = parser.parse_args()
     
     main(args)
