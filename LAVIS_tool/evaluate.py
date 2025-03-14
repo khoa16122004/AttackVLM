@@ -27,7 +27,7 @@ def seed_everything(seed: int):
     torch.backends.cudnn.benchmark = True
 
 def main(args):
-    seed(22520691)
+    seed_everything(22520691)
     with open(args.result_path, "r") as f:
         lines = [line.strip().split("\t") for line in f.readlines()]
         adv_cap = [line[3] for line in lines]
