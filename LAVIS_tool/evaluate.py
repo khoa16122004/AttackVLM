@@ -3,7 +3,7 @@ import os
 import random
 import clip
 import torch
-
+import numpy as np
 def clip_encode_text(txt, clip_model, gradient=False, detach=True):
     text_token = clip.tokenize(txt).cuda()
     if gradient == False:
@@ -16,8 +16,18 @@ def clip_encode_text(txt, clip_model, gradient=False, detach=True):
     if detach == True:
         target_text_features = target_text_features.detach()
     return target_text_features
+
+def seed_everything(seed: int):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
+
 def main(args):
-    
+    seed(22520691)
     with open(args.result_path, "r") as f:
         lines = [line.strip().split("\t") for line in f.readlines()]
         adv_cap = [line[3] for line in lines]

@@ -43,7 +43,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--img_path", type=str)
-    parser.add_argument("--model_name", default="blip2_opt", type=str)
+    parser.add_argument("--model_name", default="   blip2_opt", type=str)
     parser.add_argument("--model_type", default="pretrain_opt2.7b", type=str)
 
     args = parser.parse_args()
