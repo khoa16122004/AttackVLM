@@ -35,7 +35,9 @@ def main(args):
         
     with open(args.annotation_path, "r") as r:
         c_clean = [r.readline().strip().split("\t")[1] for _ in range(len(adv_cap))]
-        
+     
+    print(c_clean[0]) 
+    print(tar_cap[0])  
         
     
     clip_score_model_names = ["ViT-B/32", "ViT-L/14", "ViT-B/16"]
