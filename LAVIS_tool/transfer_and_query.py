@@ -103,15 +103,15 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
     adv_cap = c_clean
     delta = torch.zeros_like(image).cuda()
     for step in tqdm(range(steps)):
-        clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
-        image_repeat = img_adv.repeat(num_query, 1, 1, 1)
-        noise = torch.randn_like(image_repeat) * sigma
-        perturbed_image_repeat = torch.clamp(image_repeat + noise, 0.0, 1.0)    
+        clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32) # g(clean_cap)
+        image_repeat = img_adv.repeat(num_query, 1, 1, 1) # x
+        noise = torch.randn_like(image_repeat) * sigma # N(0, I)
+        perturbed_image_repeat = torch.clamp(image_repeat + noise, 0.0, 1.0) # x + noise    
         
-        pertubed_txt = p(model, perturbed_image_repeat)
-        pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32)
+        pertubed_txt = p(model, perturbed_image_repeat) # p(x + noise)
+        pertubed_txt_embedding = clip_encode_text(pertubed_txt, clip_img_model_vitb32) # g(p(x + noise))
         
-        coefficient = pertubed_txt_embedding - clean_txt_embedding # num_query x 512
+        coefficient = pertubed_txt_embedding - clean_txt_embedding # g(p(x + noise)) - g(c_tar)
         coefficient = torch.sum(coefficient * c_tar_embedding, dim=1)
         pseudo_gradient = (coefficient.view(num_query, 1, 1, 1) * noise).mean(dim=0) # num_query x 3 x 384 x 384 
         delta = torch.clamp(delta + alpha * pseudo_gradient.sign(), -epsilon, epsilon)
