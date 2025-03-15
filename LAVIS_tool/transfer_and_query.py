@@ -102,7 +102,7 @@ def tt_zo(image, c_clean, c_tar, model, clip_img_model_vitb32, num_query, steps,
     img_adv = image.clone()
     adv_cap = c_clean
     delta = torch.zeros_like(image).cuda()
-    for step in range(steps):
+    for step in tqdm(range(steps)):
         clean_txt_embedding = clip_encode_text(adv_cap, clip_img_model_vitb32)
         image_repeat = img_adv.repeat(num_query, 1, 1, 1)
         noise = torch.randn_like(image_repeat) * sigma
